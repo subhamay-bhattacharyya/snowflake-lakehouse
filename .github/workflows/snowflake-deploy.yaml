@@ -35,7 +35,7 @@ jobs:
           WAREHOUSE_FILES=$(find snowflake/02_warehouses -name "*.sql" -type f 2>/dev/null | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
           echo "warehouse_files=$WAREHOUSE_FILES" >> $GITHUB_OUTPUT
           
-          Find database files
+          # Find database files
           DATABASE_FILES=$(find snowflake/03_databases -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
           echo "database_files=$DATABASE_FILES" >> $GITHUB_OUTPUT
           
