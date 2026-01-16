@@ -1,0 +1,16 @@
+# ============================================================================
+# AWS Infrastructure Variables - Example
+# Copy this file to terraform.tfvars and update with your values
+# ============================================================================
+
+aws_region             = "us-east-1"
+environment            = "dev"
+project_name           = "snowflake-lakehouse"
+snowflake_external_id  = "your-snowflake-external-id"
+enable_s3_notifications = true
+raw_data_lifecycle_days = 90
+
+tags = {
+  Team       = "Data Engineering"
+  CostCenter = "Engineering"
+}
