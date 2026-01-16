@@ -3,29 +3,10 @@
 -- Description: Grant permissions on analytics database
 -- ============================================================================
 -- 
--- PREREQUISITE: Database and schemas must be owned by SYSADMIN role
--- If you get "Insufficient privileges" error, run the one-time setup script:
--- snowflake/scripts/one-time-setup-grants.sql as ACCOUNTADMIN
+-- PREREQUISITE: Database and schemas must already exist and be owned by SYSADMIN
+-- If you get "Insufficient privileges" error, run as ACCOUNTADMIN:
+--   GRANT MANAGE GRANTS ON ACCOUNT TO ROLE SYSADMIN;
 -- ============================================================================
-
--- Failsafe: Ensure database exists before granting permissions
-CREATE DATABASE IF NOT EXISTS LAKEHOUSE_DB
-    COMMENT = 'Lakehouse database following medallion architecture for analytics workloads';
-
--- Failsafe: Ensure schemas exist before granting permissions
-USE DATABASE LAKEHOUSE_DB;
-
-CREATE SCHEMA IF NOT EXISTS BRONZE
-    COMMENT = 'Raw data layer - unprocessed data from source systems';
-
-CREATE SCHEMA IF NOT EXISTS SILVER
-    COMMENT = 'Cleansed data layer - validated and standardized data';
-
-CREATE SCHEMA IF NOT EXISTS GOLD
-    COMMENT = 'Curated data layer - business-ready aggregates and analytics';
-
-CREATE SCHEMA IF NOT EXISTS STREAMLIT
-    COMMENT = 'Application layer - objects for Streamlit dashboards and apps';
 
 -- ============================================================================
 -- PUBLIC Role Grants
