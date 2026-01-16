@@ -3,7 +3,7 @@
 -- Description: General purpose compute warehouse
 -- ============================================================================
 
-CREATE WAREHOUSE IF NOT EXISTS COMPUTE_WH_1
+CREATE WAREHOUSE IF NOT EXISTS COMPUTE_WH_2
   WITH
   WAREHOUSE_SIZE = 'SMALL'
   AUTO_SUSPEND = 300
