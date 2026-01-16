@@ -1,18 +1,18 @@
 name: Snowflake Deploy
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - 'snowflake/**'
-  pull_request:
-    branches:
-      - main
-      - develop
-    paths:
-      - 'snowflake/**'
+  # push:
+  #   branches:
+  #     - main
+  #     - develop
+  #   paths:
+  #     - 'snowflake/**'
+  # pull_request:
+  #   branches:
+  #     - main
+  #     - develop
+  #   paths:
+  #     - 'snowflake/**'
   workflow_dispatch:
 
 jobs:
@@ -64,11 +64,6 @@ jobs:
           account: ${{ vars.SNOWFLAKE_ACCOUNT }}
           user: ${{ vars.SNOWFLAKE_USER }}
           private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
-          role: ${{ vars.SNOWFLAKE_ROLE }}
-          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
-          database: ${{ vars.SNOWFLAKE_DATABASE }}
-          schema: PUBLIC
           script: ${{ matrix.sql_file }}
 
   deploy-databases:
@@ -92,11 +87,6 @@ jobs:
           account: ${{ vars.SNOWFLAKE_ACCOUNT }}
           user: ${{ vars.SNOWFLAKE_USER }}
           private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
-          role: ${{ vars.SNOWFLAKE_ROLE }}
-          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
-          database: ${{ vars.SNOWFLAKE_DATABASE }}
-          schema: PUBLIC
           script: ${{ matrix.sql_file }}
 
   deploy-tables:
@@ -120,9 +110,4 @@ jobs:
           account: ${{ vars.SNOWFLAKE_ACCOUNT }}
           user: ${{ vars.SNOWFLAKE_USER }}
           private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
-          role: ${{ vars.SNOWFLAKE_ROLE }}
-          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
-          database: ${{ vars.SNOWFLAKE_DATABASE }}
-          schema: sales
           script: ${{ matrix.sql_file }}

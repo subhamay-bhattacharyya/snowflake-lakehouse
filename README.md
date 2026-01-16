@@ -17,11 +17,11 @@ This repository provides a complete solution for deploying and managing a Snowfl
 
 ```
 .
-├── infra/                      # Infrastructure as Code
+├── infra/                     # Infrastructure as Code
 │   ├── aws/tf/                # AWS resources (S3, IAM)
 │   ├── azure/tf/              # Azure resources (Storage, Managed Identity)
 │   └── gcp/tf/                # GCP resources (GCS, Service Accounts)
-├── snowflake/                  # Snowflake DDL Scripts
+├── snowflake/                 # Snowflake DDL Scripts
 │   ├── 00_account/            # Account-level objects
 │   ├── 01_security/           # Roles, users, grants
 │   ├── 02_warehouses/         # Virtual warehouses
@@ -110,20 +110,83 @@ SELECT
 
 **Note:** If you want to use a different database/schema/table name, you can customize it using the `migrations_table` input parameter in the GitHub Actions workflow.
 
-### 1. Configure GitHub Secrets and Variables
+### 1. Create Dedicated Service Account
+
+For security best practices, create a dedicated service account for GitHub Actions instead of using your personal account.
+
+#### Step 1: Generate Key Pair
+
+On your local machine, generate an RSA key pair:
+
+```bash
+# Generate private key with passphrase
+openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out snowflake_key.p8 -v2 aes256
+
+# Generate public key
+openssl rsa -in snowflake_key.p8 -pubout -out snowflake_key.pub
+
+# Extract public key value (remove header/footer and newlines)
+grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC" | tr -d '\n'
+```
+
+**Save the output** - you'll need it for the next step.
+
+#### Step 2: Create Service Account in Snowflake
+
+Run this SQL in Snowflake (replace `YOUR_PUBLIC_KEY_HERE` with the output from Step 1):
+
+```sql
+-- =========================================================
+-- Create Service Account for GitHub Actions
+-- =========================================================
+
+-- Create dedicated service account
+CREATE USER IF NOT EXISTS GH_ACTIONS_USER
+  RSA_PUBLIC_KEY = 'YOUR_PUBLIC_KEY_HERE'
+  DEFAULT_ROLE = SYSADMIN
+  DEFAULT_WAREHOUSE = COMPUTE_WH
+  MUST_CHANGE_PASSWORD = FALSE
+  COMMENT = 'Service account for GitHub Actions CI/CD deployments';
+
+-- Grant SYSADMIN role (sufficient for DDL operations)
+GRANT ROLE SYSADMIN TO USER GH_ACTIONS_USER;
+
+-- Grant usage on utility warehouse
+GRANT USAGE ON WAREHOUSE UTIL_WH TO ROLE SYSADMIN;
+GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE SYSADMIN;
+
+-- Grant access to utility database for migration tracking
+GRANT USAGE ON DATABASE UTIL_DB TO ROLE SYSADMIN;
+GRANT USAGE ON SCHEMA UTIL_DB.UTIL_SCHEMA TO ROLE SYSADMIN;
+GRANT SELECT, INSERT, UPDATE ON TABLE UTIL_DB.UTIL_SCHEMA.DDL_MIGRATION_HISTORY TO ROLE SYSADMIN;
+
+-- Verify the user was created
+DESC USER GH_ACTIONS_USER;
+```
+
+**Security Notes:**
+- ✅ Use `SYSADMIN` role (not `ACCOUNTADMIN`) for DDL operations
+- ✅ Key-pair authentication is more secure than passwords
+- ✅ Service accounts provide better audit trails
+- ✅ Never commit private keys to the repository
+
+### 2. Configure GitHub Secrets and Variables
 
 Set up GitHub Actions authentication. See [.github/SETUP.md](.github/SETUP.md) for detailed instructions.
 
 **Variables** (Settings → Secrets and variables → Actions → Variables):
-- `SNOWFLAKE_ACCOUNT`
-- `SNOWFLAKE_USER`
-- `SNOWFLAKE_ROLE`
-- `SNOWFLAKE_WAREHOUSE`
-- `SNOWFLAKE_DATABASE`
+- `SNOWFLAKE_ACCOUNT` - Your account identifier (e.g., `AGXUOKJ-JKC15404`)
+- `SNOWFLAKE_USER` - Service account username (e.g., `GH_ACTIONS_USER`)
 
 **Secrets** (Settings → Secrets and variables → Actions → Secrets):
-- `SNOWFLAKE_PRIVATE_KEY`
-- `SNOWFLAKE_PASSPHRASE`
+- `SNOWFLAKE_PRIVATE_KEY` - Content of `snowflake_key.p8` file (including header/footer)
+- `SNOWFLAKE_PASSPHRASE` - Passphrase you used when generating the key
+
+**Example Values:**
+```
+SNOWFLAKE_ACCOUNT: AGXUOKJ-JKC15404
+SNOWFLAKE_USER: GH_ACTIONS_USER
+```
 
 ## Snowflake Object Organization
 
