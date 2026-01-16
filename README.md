@@ -110,27 +110,21 @@ SELECT
   CURRENT_TIMESTAMP() AS verified_at;
 ```
 
-**Step 2: Grant MANAGE GRANTS Privilege (Important!)**
+**Step 2: Grant ACCOUNTADMIN Role to Service Account**
 
-SYSADMIN needs the MANAGE GRANTS privilege to grant permissions to other roles like PUBLIC. Run this as ACCOUNTADMIN:
+The service account needs ACCOUNTADMIN role to execute grant statements. Run this as ACCOUNTADMIN:
 
 ```sql
--- ============================================================================
--- ONE-TIME SETUP: Grant MANAGE GRANTS to SYSADMIN
--- Run this ONCE as ACCOUNTADMIN before first deployment
--- ============================================================================
-
 USE ROLE ACCOUNTADMIN;
 
--- Grant MANAGE GRANTS privilege to SYSADMIN
--- This allows SYSADMIN to grant privileges to other roles like PUBLIC
-GRANT MANAGE GRANTS ON ACCOUNT TO ROLE SYSADMIN;
+-- Grant ACCOUNTADMIN role to the service account
+GRANT ROLE ACCOUNTADMIN TO USER GH_ACTIONS_USER;
 
 -- Verify the grant
-SHOW GRANTS TO ROLE SYSADMIN;
+SHOW GRANTS TO USER GH_ACTIONS_USER;
 ```
 
-**Note:** This script is also available at `snowflake/scripts/one-time-setup-grants.sql`
+**Note:** The GitHub Actions workflow automatically uses ACCOUNTADMIN role for files named `*grants.sql` and SYSADMIN for all other DDL scripts. This ensures proper privilege separation while allowing the service account to manage permissions.
 
 **Note:** If you want to use a different database/schema/table name, you can customize it using the `migrations_table` input parameter in the GitHub Actions workflow.
 
@@ -175,6 +169,9 @@ CREATE USER IF NOT EXISTS GH_ACTIONS_USER
 
 -- Grant SYSADMIN role (sufficient for DDL operations)
 GRANT ROLE SYSADMIN TO USER GH_ACTIONS_USER;
+
+-- Grant ACCOUNTADMIN role (required for grant operations)
+GRANT ROLE ACCOUNTADMIN TO USER GH_ACTIONS_USER;
 
 -- Grant usage on warehouses
 GRANT USAGE ON WAREHOUSE UTIL_WH TO ROLE SYSADMIN;

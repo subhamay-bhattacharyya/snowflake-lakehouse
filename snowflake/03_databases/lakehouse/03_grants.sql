@@ -3,9 +3,8 @@
 -- Description: Grant permissions on analytics database
 -- ============================================================================
 -- 
--- PREREQUISITE: Database and schemas must already exist and be owned by SYSADMIN
--- If you get "Insufficient privileges" error, run as ACCOUNTADMIN:
---   GRANT MANAGE GRANTS ON ACCOUNT TO ROLE SYSADMIN;
+-- NOTE: This script runs with ACCOUNTADMIN role in the GitHub Actions workflow
+-- The workflow automatically detects 'grants.sql' files and uses ACCOUNTADMIN
 -- ============================================================================
 
 -- ============================================================================
