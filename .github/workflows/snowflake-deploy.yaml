@@ -45,6 +45,38 @@ jobs:
           echo "Found warehouse files: $WAREHOUSE_FILES"
           echo "Found database files: $DATABASE_FILES"
           echo "Found table files: $TABLE_FILES"
+          
+          # Print to GITHUB_STEP_SUMMARY
+          echo "## SQL Files Found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Category | File Path |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-----------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Add warehouse files to table
+          if [ "$WAREHOUSE_FILES" != "[]" ]; then
+            echo "$WAREHOUSE_FILES" | jq -r '.[]' | while read -r file; do
+              echo "| Warehouse | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          # Add database files to table
+          if [ "$DATABASE_FILES" != "[]" ]; then
+            echo "$DATABASE_FILES" | jq -r '.[]' | while read -r file; do
+              echo "| Database | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          # Add table files to table
+          if [ "$TABLE_FILES" != "[]" ]; then
+            echo "$TABLE_FILES" | jq -r '.[]' | while read -r file; do
+              echo "| Table | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          # If no files found at all
+          if [ "$WAREHOUSE_FILES" = "[]" ] && [ "$DATABASE_FILES" = "[]" ] && [ "$TABLE_FILES" = "[]" ]; then
+            echo "| - | _No SQL files found_ |" >> $GITHUB_STEP_SUMMARY
+          fi
 
   deploy-warehouses:
     name: Deploy Warehouse
