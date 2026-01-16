@@ -120,7 +120,8 @@ On your local machine, generate an RSA key pair:
 
 ```bash
 # Generate private key with passphrase
-openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out snowflake_key.p8 -v2 aes256
+# Generate unencrypted PKCS8 private key
+openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out snowflake_key.p8 -nocrypt
 
 # Generate public key
 openssl rsa -in snowflake_key.p8 -pubout -out snowflake_key.pub
@@ -155,13 +156,31 @@ GRANT ROLE SYSADMIN TO USER GH_ACTIONS_USER;
 GRANT USAGE ON WAREHOUSE UTIL_WH TO ROLE SYSADMIN;
 GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE SYSADMIN;
 
--- Grant access to utility database for migration tracking
+-- Grant usage on the utility database
 GRANT USAGE ON DATABASE UTIL_DB TO ROLE SYSADMIN;
 GRANT USAGE ON SCHEMA UTIL_DB.UTIL_SCHEMA TO ROLE SYSADMIN;
-GRANT SELECT, INSERT, UPDATE ON TABLE UTIL_DB.UTIL_SCHEMA.DDL_MIGRATION_HISTORY TO ROLE SYSADMIN;
 
--- Verify the user was created
+-- Grant create privileges for the migration table
+GRANT CREATE TABLE ON SCHEMA UTIL_DB.UTIL_SCHEMA TO ROLE SYSADMIN;
+
+-- Grant all privileges on the migration table (if it already exists)
+GRANT ALL PRIVILEGES ON TABLE UTIL_DB.UTIL_SCHEMA.DDL_MIGRATION_HISTORY TO ROLE SYSADMIN;
+
+-- If the user needs to create the database/schema (first run)
+GRANT CREATE DATABASE ON ACCOUNT TO ROLE SYSADMIN;
+
+-- Verify the user's role
 DESC USER GH_ACTIONS_USER;
+
+-- Make sure DEFAULT_ROLE is SYSADMIN
+-- Or explicitly set it
+ALTER USER GH_ACTIONS_USER SET DEFAULT_ROLE = SYSADMIN;
+
+-- See what roles the user has
+SHOW GRANTS TO USER GH_ACTIONS_USER;
+
+-- See what the SYSADMIN role can do
+SHOW GRANTS TO ROLE SYSADMIN;
 ```
 
 **Security Notes:**
