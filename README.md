@@ -51,6 +51,8 @@ This repository provides a complete solution for deploying and managing a Snowfl
 
 Before using this action, run the following SQL script in Snowflake to create the utility infrastructure (only needs to be run once):
 
+**Step 1: Create Utility Infrastructure**
+
 ```sql
 -- =========================================================
 -- Snowflake Utility Setup for DDL Migrations
@@ -107,6 +109,30 @@ SELECT
   'UTIL_DB.UTIL_SCHEMA.DDL_MIGRATION_HISTORY created successfully' AS status,
   CURRENT_TIMESTAMP() AS verified_at;
 ```
+
+**Step 2: Transfer Database Ownership (Important!)**
+
+After creating databases through the workflow, you need to transfer ownership to SYSADMIN so it can grant privileges. Run this as ACCOUNTADMIN:
+
+```sql
+-- ============================================================================
+-- ONE-TIME SETUP: Database Ownership Transfer
+-- Run this ONCE as ACCOUNTADMIN after first database creation
+-- ============================================================================
+
+USE ROLE ACCOUNTADMIN;
+
+-- Transfer database ownership to SYSADMIN
+GRANT OWNERSHIP ON DATABASE LAKEHOUSE_DB TO ROLE SYSADMIN COPY CURRENT GRANTS;
+
+-- Transfer all schema ownership to SYSADMIN
+GRANT OWNERSHIP ON ALL SCHEMAS IN DATABASE LAKEHOUSE_DB TO ROLE SYSADMIN COPY CURRENT GRANTS;
+
+-- Verify ownership transfer
+SHOW GRANTS ON DATABASE LAKEHOUSE_DB;
+```
+
+**Note:** This script is also available at `snowflake/scripts/one-time-setup-grants.sql`
 
 **Note:** If you want to use a different database/schema/table name, you can customize it using the `migrations_table` input parameter in the GitHub Actions workflow.
 
