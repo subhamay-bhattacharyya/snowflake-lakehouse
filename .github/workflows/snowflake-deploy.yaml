@@ -292,7 +292,7 @@ jobs:
           fi
           
           # Migration History
-          echo "## 📜 Migration History (Last 20 Deployments)" >> $GITHUB_STEP_SUMMARY
+          echo "## 📜 Migration History (Last 20 Deployments - Most Recent First)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ -f migration_history.txt ] && [ -s migration_history.txt ]; then
