@@ -7,6 +7,10 @@
 CREATE DATABASE IF NOT EXISTS LAKEHOUSE_DB
     COMMENT = 'Lakehouse database following medallion architecture for analytics workloads';
 
+-- Transfer ownership to SYSADMIN role
+-- This ensures SYSADMIN has full control over the database and can grant privileges
+GRANT OWNERSHIP ON DATABASE LAKEHOUSE_DB TO ROLE SYSADMIN COPY CURRENT GRANTS;
+
 -- Failsafe: Ensure schemas exist before granting permissions
 USE DATABASE LAKEHOUSE_DB;
 
@@ -21,6 +25,12 @@ CREATE SCHEMA IF NOT EXISTS GOLD
 
 CREATE SCHEMA IF NOT EXISTS STREAMLIT
     COMMENT = 'Application layer - objects for Streamlit dashboards and apps';
+
+-- Transfer ownership of all schemas to SYSADMIN
+GRANT OWNERSHIP ON SCHEMA BRONZE TO ROLE SYSADMIN COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON SCHEMA SILVER TO ROLE SYSADMIN COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON SCHEMA GOLD TO ROLE SYSADMIN COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON SCHEMA STREAMLIT TO ROLE SYSADMIN COPY CURRENT GRANTS;
 
 -- ============================================================================
 -- PUBLIC Role Grants
