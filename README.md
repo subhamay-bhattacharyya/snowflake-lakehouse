@@ -152,7 +152,7 @@ CREATE USER IF NOT EXISTS GH_ACTIONS_USER
 -- Grant SYSADMIN role (sufficient for DDL operations)
 GRANT ROLE SYSADMIN TO USER GH_ACTIONS_USER;
 
--- Grant usage on utility warehouse
+-- Grant usage on warehouses
 GRANT USAGE ON WAREHOUSE UTIL_WH TO ROLE SYSADMIN;
 GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE SYSADMIN;
 
@@ -172,15 +172,12 @@ GRANT CREATE DATABASE ON ACCOUNT TO ROLE SYSADMIN;
 -- Verify the user's role
 DESC USER GH_ACTIONS_USER;
 
--- Make sure DEFAULT_ROLE is SYSADMIN
--- Or explicitly set it
-ALTER USER GH_ACTIONS_USER SET DEFAULT_ROLE = SYSADMIN;
-
 -- See what roles the user has
 SHOW GRANTS TO USER GH_ACTIONS_USER;
 
 -- See what the SYSADMIN role can do
 SHOW GRANTS TO ROLE SYSADMIN;
+
 ```
 
 **Security Notes:**
