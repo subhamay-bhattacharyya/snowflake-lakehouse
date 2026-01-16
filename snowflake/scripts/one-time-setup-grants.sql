@@ -11,18 +11,21 @@
 
 USE ROLE ACCOUNTADMIN;
 
--- Transfer database ownership to SYSADMIN
+-- Grant MANAGE GRANTS privilege to SYSADMIN
+-- This allows SYSADMIN to grant privileges to other roles like PUBLIC
+GRANT MANAGE GRANTS ON ACCOUNT TO ROLE SYSADMIN;
+
+-- Transfer database ownership to SYSADMIN (if database already exists)
 GRANT OWNERSHIP ON DATABASE LAKEHOUSE_DB TO ROLE SYSADMIN COPY CURRENT GRANTS;
 
--- Transfer all schema ownership to SYSADMIN
+-- Transfer all schema ownership to SYSADMIN (if schemas already exist)
 GRANT OWNERSHIP ON ALL SCHEMAS IN DATABASE LAKEHOUSE_DB TO ROLE SYSADMIN COPY CURRENT GRANTS;
+
+-- Verify grants
+SHOW GRANTS TO ROLE SYSADMIN;
 
 -- Verify ownership transfer
 SHOW GRANTS ON DATABASE LAKEHOUSE_DB;
-SHOW GRANTS ON SCHEMA LAKEHOUSE_DB.BRONZE;
-SHOW GRANTS ON SCHEMA LAKEHOUSE_DB.SILVER;
-SHOW GRANTS ON SCHEMA LAKEHOUSE_DB.GOLD;
-SHOW GRANTS ON SCHEMA LAKEHOUSE_DB.STREAMLIT;
 
--- Confirm SYSADMIN now owns the database
-SELECT 'Ownership transfer complete - SYSADMIN now owns LAKEHOUSE_DB' AS status;
+-- Confirm SYSADMIN now has proper privileges
+SELECT 'Setup complete - SYSADMIN can now manage grants and owns LAKEHOUSE_DB' AS status;

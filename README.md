@@ -110,26 +110,24 @@ SELECT
   CURRENT_TIMESTAMP() AS verified_at;
 ```
 
-**Step 2: Transfer Database Ownership (Important!)**
+**Step 2: Grant MANAGE GRANTS Privilege (Important!)**
 
-After creating databases through the workflow, you need to transfer ownership to SYSADMIN so it can grant privileges. Run this as ACCOUNTADMIN:
+SYSADMIN needs the MANAGE GRANTS privilege to grant permissions to other roles like PUBLIC. Run this as ACCOUNTADMIN:
 
 ```sql
 -- ============================================================================
--- ONE-TIME SETUP: Database Ownership Transfer
--- Run this ONCE as ACCOUNTADMIN after first database creation
+-- ONE-TIME SETUP: Grant MANAGE GRANTS to SYSADMIN
+-- Run this ONCE as ACCOUNTADMIN before first deployment
 -- ============================================================================
 
 USE ROLE ACCOUNTADMIN;
 
--- Transfer database ownership to SYSADMIN
-GRANT OWNERSHIP ON DATABASE LAKEHOUSE_DB TO ROLE SYSADMIN COPY CURRENT GRANTS;
+-- Grant MANAGE GRANTS privilege to SYSADMIN
+-- This allows SYSADMIN to grant privileges to other roles like PUBLIC
+GRANT MANAGE GRANTS ON ACCOUNT TO ROLE SYSADMIN;
 
--- Transfer all schema ownership to SYSADMIN
-GRANT OWNERSHIP ON ALL SCHEMAS IN DATABASE LAKEHOUSE_DB TO ROLE SYSADMIN COPY CURRENT GRANTS;
-
--- Verify ownership transfer
-SHOW GRANTS ON DATABASE LAKEHOUSE_DB;
+-- Verify the grant
+SHOW GRANTS TO ROLE SYSADMIN;
 ```
 
 **Note:** This script is also available at `snowflake/scripts/one-time-setup-grants.sql`
