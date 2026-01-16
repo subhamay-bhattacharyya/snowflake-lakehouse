@@ -35,16 +35,16 @@ jobs:
           echo "warehouse_files=$WAREHOUSE_FILES" >> $GITHUB_OUTPUT
           
           # Find database files
-          DATABASE_FILES=$(find snowflake/03_databases -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
-          echo "database_files=$DATABASE_FILES" >> $GITHUB_OUTPUT
+          # DATABASE_FILES=$(find snowflake/03_databases -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
+          # echo "database_files=$DATABASE_FILES" >> $GITHUB_OUTPUT
           
-          # Find table files
-          TABLE_FILES=$(find snowflake/05_schemas -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
-          echo "table_files=$TABLE_FILES" >> $GITHUB_OUTPUT
+          # # Find table files
+          # TABLE_FILES=$(find snowflake/05_schemas -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
+          # echo "table_files=$TABLE_FILES" >> $GITHUB_OUTPUT
           
           echo "Found warehouse files: $WAREHOUSE_FILES"
-          echo "Found database files: $DATABASE_FILES"
-          echo "Found table files: $TABLE_FILES"
+          # echo "Found database files: $DATABASE_FILES"
+          # echo "Found table files: $TABLE_FILES"
           
           # Print to GITHUB_STEP_SUMMARY
           echo "## SQL Files Found" >> $GITHUB_STEP_SUMMARY
@@ -60,23 +60,23 @@ jobs:
           fi
           
           # Add database files to table
-          if [ "$DATABASE_FILES" != "[]" ]; then
-            echo "$DATABASE_FILES" | jq -r '.[]' | while read -r file; do
-              echo "| Database | \`$file\` |" >> $GITHUB_STEP_SUMMARY
-            done
-          fi
+          # if [ "$DATABASE_FILES" != "[]" ]; then
+          #   echo "$DATABASE_FILES" | jq -r '.[]' | while read -r file; do
+          #     echo "| Database | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+          #   done
+          # fi
           
           # Add table files to table
-          if [ "$TABLE_FILES" != "[]" ]; then
-            echo "$TABLE_FILES" | jq -r '.[]' | while read -r file; do
-              echo "| Table | \`$file\` |" >> $GITHUB_STEP_SUMMARY
-            done
-          fi
+          # if [ "$TABLE_FILES" != "[]" ]; then
+          #   echo "$TABLE_FILES" | jq -r '.[]' | while read -r file; do
+          #     echo "| Table | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+          #   done
+          # fi
           
           # If no files found at all
-          if [ "$WAREHOUSE_FILES" = "[]" ] && [ "$DATABASE_FILES" = "[]" ] && [ "$TABLE_FILES" = "[]" ]; then
-            echo "| - | _No SQL files found_ |" >> $GITHUB_STEP_SUMMARY
-          fi
+          # if [ "$WAREHOUSE_FILES" = "[]" ] && [ "$DATABASE_FILES" = "[]" ] && [ "$TABLE_FILES" = "[]" ]; then
+          #   echo "| - | _No SQL files found_ |" >> $GITHUB_STEP_SUMMARY
+          # fi
 
   deploy-warehouses:
     name: Deploy Warehouse
@@ -99,48 +99,48 @@ jobs:
           role: SYSADMIN
           script: ${{ matrix.sql_file }}
 
-  deploy-databases:
-    name: Deploy Database
-    runs-on: ubuntu-latest
-    needs: [find-sql-files, deploy-warehouses]
-    if: |
-      always() &&
-      needs.find-sql-files.outputs.database_files != '[]' &&
-      (needs.deploy-warehouses.result == 'success' || needs.deploy-warehouses.result == 'skipped')
-    strategy:
-      matrix:
-        sql_file: ${{ fromJson(needs.find-sql-files.outputs.database_files) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+  # deploy-databases:
+  #   name: Deploy Database
+  #   runs-on: ubuntu-latest
+  #   needs: [find-sql-files, deploy-warehouses]
+  #   if: |
+  #     always() &&
+  #     needs.find-sql-files.outputs.database_files != '[]' &&
+  #     (needs.deploy-warehouses.result == 'success' || needs.deploy-warehouses.result == 'skipped')
+  #   strategy:
+  #     matrix:
+  #       sql_file: ${{ fromJson(needs.find-sql-files.outputs.database_files) }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
       
-      - name: Deploy ${{ matrix.sql_file }}
-        uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
-        with:
-          account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-          user: ${{ vars.SNOWFLAKE_USER }}
-          private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          script: ${{ matrix.sql_file }}
+  #     - name: Deploy ${{ matrix.sql_file }}
+  #       uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
+  #       with:
+  #         account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+  #         user: ${{ vars.SNOWFLAKE_USER }}
+  #         private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+  #         script: ${{ matrix.sql_file }}
 
-  deploy-tables:
-    name: Deploy Table
-    runs-on: ubuntu-latest
-    needs: [find-sql-files, deploy-databases]
-    if: |
-      always() &&
-      needs.find-sql-files.outputs.table_files != '[]' &&
-      (needs.deploy-databases.result == 'success' || needs.deploy-databases.result == 'skipped')
-    strategy:
-      matrix:
-        sql_file: ${{ fromJson(needs.find-sql-files.outputs.table_files) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+  # deploy-tables:
+  #   name: Deploy Table
+  #   runs-on: ubuntu-latest
+  #   needs: [find-sql-files, deploy-databases]
+  #   if: |
+  #     always() &&
+  #     needs.find-sql-files.outputs.table_files != '[]' &&
+  #     (needs.deploy-databases.result == 'success' || needs.deploy-databases.result == 'skipped')
+  #   strategy:
+  #     matrix:
+  #       sql_file: ${{ fromJson(needs.find-sql-files.outputs.table_files) }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
       
-      - name: Deploy ${{ matrix.sql_file }}
-        uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
-        with:
-          account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-          user: ${{ vars.SNOWFLAKE_USER }}
-          private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          script: ${{ matrix.sql_file }}
+  #     - name: Deploy ${{ matrix.sql_file }}
+  #       uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
+  #       with:
+  #         account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+  #         user: ${{ vars.SNOWFLAKE_USER }}
+  #         private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+  #         script: ${{ matrix.sql_file }}
