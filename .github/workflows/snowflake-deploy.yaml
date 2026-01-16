@@ -1,0 +1,128 @@
+name: Snowflake Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'snowflake/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'snowflake/**'
+  workflow_dispatch:
+
+jobs:
+  find-sql-files:
+    name: Find SQL Files
+    runs-on: ubuntu-latest
+    outputs:
+      warehouse_files: ${{ steps.find.outputs.warehouse_files }}
+      database_files: ${{ steps.find.outputs.database_files }}
+      table_files: ${{ steps.find.outputs.table_files }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Find SQL Files
+        id: find
+        run: |
+          # Find warehouse files
+          WAREHOUSE_FILES=$(find snowflake/02_warehouses -name "*.sql" -type f 2>/dev/null | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
+          echo "warehouse_files=$WAREHOUSE_FILES" >> $GITHUB_OUTPUT
+          
+          # Find database files
+          DATABASE_FILES=$(find snowflake/03_databases -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
+          echo "database_files=$DATABASE_FILES" >> $GITHUB_OUTPUT
+          
+          # Find table files
+          TABLE_FILES=$(find snowflake/05_schemas -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
+          echo "table_files=$TABLE_FILES" >> $GITHUB_OUTPUT
+          
+          echo "Found warehouse files: $WAREHOUSE_FILES"
+          echo "Found database files: $DATABASE_FILES"
+          echo "Found table files: $TABLE_FILES"
+
+  deploy-warehouses:
+    name: Deploy Warehouse
+    runs-on: ubuntu-latest
+    needs: find-sql-files
+    if: needs.find-sql-files.outputs.warehouse_files != '[]'
+    strategy:
+      matrix:
+        sql_file: ${{ fromJson(needs.find-sql-files.outputs.warehouse_files) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy ${{ matrix.sql_file }}
+        uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
+        with:
+          account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          user: ${{ vars.SNOWFLAKE_USER }}
+          private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
+          role: ${{ vars.SNOWFLAKE_ROLE }}
+          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+          database: ${{ vars.SNOWFLAKE_DATABASE }}
+          schema: PUBLIC
+          script: ${{ matrix.sql_file }}
+
+  deploy-databases:
+    name: Deploy Database
+    runs-on: ubuntu-latest
+    needs: [find-sql-files, deploy-warehouses]
+    if: |
+      always() &&
+      needs.find-sql-files.outputs.database_files != '[]' &&
+      (needs.deploy-warehouses.result == 'success' || needs.deploy-warehouses.result == 'skipped')
+    strategy:
+      matrix:
+        sql_file: ${{ fromJson(needs.find-sql-files.outputs.database_files) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy ${{ matrix.sql_file }}
+        uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
+        with:
+          account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          user: ${{ vars.SNOWFLAKE_USER }}
+          private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
+          role: ${{ vars.SNOWFLAKE_ROLE }}
+          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+          database: ${{ vars.SNOWFLAKE_DATABASE }}
+          schema: PUBLIC
+          script: ${{ matrix.sql_file }}
+
+  deploy-tables:
+    name: Deploy Table
+    runs-on: ubuntu-latest
+    needs: [find-sql-files, deploy-databases]
+    if: |
+      always() &&
+      needs.find-sql-files.outputs.table_files != '[]' &&
+      (needs.deploy-databases.result == 'success' || needs.deploy-databases.result == 'skipped')
+    strategy:
+      matrix:
+        sql_file: ${{ fromJson(needs.find-sql-files.outputs.table_files) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy ${{ matrix.sql_file }}
+        uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
+        with:
+          account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          user: ${{ vars.SNOWFLAKE_USER }}
+          private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
+          role: ${{ vars.SNOWFLAKE_ROLE }}
+          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+          database: ${{ vars.SNOWFLAKE_DATABASE }}
+          schema: sales
+          script: ${{ matrix.sql_file }}
