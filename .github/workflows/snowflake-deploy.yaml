@@ -25,7 +25,7 @@ jobs:
       table_files: ${{ steps.find.outputs.table_files }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Find SQL Files
         id: find
@@ -88,7 +88,7 @@ jobs:
         sql_file: ${{ fromJson(needs.find-sql-files.outputs.warehouse_files) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Deploy ${{ matrix.sql_file }}
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
@@ -112,7 +112,7 @@ jobs:
         sql_file: ${{ fromJson(needs.find-sql-files.outputs.database_files) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Deploy ${{ matrix.sql_file }}
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
@@ -135,7 +135,7 @@ jobs:
         sql_file: ${{ fromJson(needs.find-sql-files.outputs.table_files) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Deploy ${{ matrix.sql_file }}
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
