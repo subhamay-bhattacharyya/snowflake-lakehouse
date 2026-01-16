@@ -156,31 +156,80 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       
-      - name: Create Migration History Query
+      - name: Install Snowflake CLI
         run: |
-          cat > /tmp/query_migration_history.sql << 'EOF'
-          SELECT 
-            script_name,
-            script_path,
-            status,
-            TO_CHAR(applied_at, 'YYYY-MM-DD HH24:MI:SS') as applied_at,
-            actor
-          FROM UTIL_DB.UTIL_SCHEMA.DDL_MIGRATION_HISTORY
-          ORDER BY applied_at DESC
-          LIMIT 20;
-          EOF
+          pip install snowflake-connector-python
       
       - name: Query Migration History
         id: migration_history
-        uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
         continue-on-error: true
-        with:
-          account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-          user: ${{ vars.SNOWFLAKE_USER }}
-          private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          role: SYSADMIN
-          script: /tmp/query_migration_history.sql
-          track_migrations: false
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import snowflake.connector
+          import os
+          import json
+          from cryptography.hazmat.primitives import serialization
+          from cryptography.hazmat.backends import default_backend
+          
+          # Load private key
+          private_key_pem = os.environ['SNOWFLAKE_PRIVATE_KEY']
+          
+          p_key = serialization.load_pem_private_key(
+              private_key_pem.encode(),
+              password=None,
+              backend=default_backend()
+          )
+          
+          pkb = p_key.private_bytes(
+              encoding=serialization.Encoding.DER,
+              format=serialization.PrivateFormat.PKCS8,
+              encryption_algorithm=serialization.NoEncryption()
+          )
+          
+          # Connect to Snowflake
+          conn = snowflake.connector.connect(
+              account=os.environ['SNOWFLAKE_ACCOUNT'],
+              user=os.environ['SNOWFLAKE_USER'],
+              private_key=pkb,
+              role='SYSADMIN'
+          )
+          
+          cursor = conn.cursor()
+          
+          try:
+              cursor.execute("""
+                  SELECT 
+                      script_name,
+                      script_path,
+                      status,
+                      TO_CHAR(applied_at, 'YYYY-MM-DD HH24:MI:SS') as applied_at,
+                      actor
+                  FROM UTIL_DB.UTIL_SCHEMA.DDL_MIGRATION_HISTORY
+                  ORDER BY applied_at DESC
+                  LIMIT 20
+              """)
+              
+              results = cursor.fetchall()
+              
+              # Write results to file
+              with open('migration_history.txt', 'w') as f:
+                  for row in results:
+                      f.write(f"{row[0]}|{row[1]}|{row[2]}|{row[3]}|{row[4]}\n")
+              
+              print(f"Found {len(results)} migration records")
+              
+          except Exception as e:
+              print(f"Query failed: {e}")
+              with open('migration_history.txt', 'w') as f:
+                  f.write("ERROR|Query failed|N/A|N/A|N/A\n")
+          finally:
+              cursor.close()
+              conn.close()
+          PYTHON_SCRIPT
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ vars.SNOWFLAKE_USER }}
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
       
       - name: Generate Deployment Summary
         run: |
@@ -246,12 +295,17 @@ jobs:
           echo "## 📜 Migration History (Last 20 Deployments)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ "${{ steps.migration_history.outcome }}" == "success" ]; then
+          if [ -f migration_history.txt ] && [ -s migration_history.txt ]; then
             echo "| Script Name | Path | Status | Applied At | Actor |" >> $GITHUB_STEP_SUMMARY
             echo "|-------------|------|--------|------------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "_Query executed successfully. Check action logs for detailed results._" >> $GITHUB_STEP_SUMMARY
+            
+            while IFS='|' read -r script_name script_path status applied_at actor; do
+              # Truncate long paths for readability
+              short_path=$(echo "$script_path" | awk -F'/' '{print $(NF-1)"/"$NF}')
+              echo "| \`$script_name\` | \`$short_path\` | $status | $applied_at | $actor |" >> $GITHUB_STEP_SUMMARY
+            done < migration_history.txt
           else
-            echo "_Migration history table not available or query failed. This is normal for first-time deployments._" >> $GITHUB_STEP_SUMMARY
+            echo "_No migration history available. This is normal for first-time deployments._" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
