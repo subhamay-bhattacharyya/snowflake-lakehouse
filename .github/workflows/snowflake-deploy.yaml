@@ -121,7 +121,7 @@ jobs:
           account: ${{ vars.SNOWFLAKE_ACCOUNT }}
           user: ${{ vars.SNOWFLAKE_USER }}
           private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          role: ${{ contains(matrix.sql_file, 'grants.sql') && 'SECURITYADMIN' || 'SYSADMIN' }}
+          role: SYSADMIN
           script: ${{ matrix.sql_file }}
 
   # deploy-tables:

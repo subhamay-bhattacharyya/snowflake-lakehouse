@@ -110,22 +110,22 @@ SELECT
   CURRENT_TIMESTAMP() AS verified_at;
 ```
 
-**Step 2: Grant SECURITYADMIN Role to Service Account**
+**Step 2: Grant MANAGE GRANTS Privilege to SYSADMIN**
 
-The service account needs SECURITYADMIN role to execute grant statements. Run this as ACCOUNTADMIN:
+SYSADMIN needs the MANAGE GRANTS privilege to grant permissions to other roles like PUBLIC. Run this as ACCOUNTADMIN:
 
 ```sql
 USE ROLE ACCOUNTADMIN;
 
--- Grant SECURITYADMIN role to the service account
--- SECURITYADMIN can manage grants without full ACCOUNTADMIN privileges
-GRANT ROLE SECURITYADMIN TO USER GH_ACTIONS_USER;
+-- Grant MANAGE GRANTS privilege to SYSADMIN
+-- This allows SYSADMIN to grant privileges on objects it owns
+GRANT MANAGE GRANTS ON ACCOUNT TO ROLE SYSADMIN;
 
 -- Verify the grant
-SHOW GRANTS TO USER GH_ACTIONS_USER;
+SHOW GRANTS TO ROLE SYSADMIN;
 ```
 
-**Note:** The GitHub Actions workflow automatically uses SECURITYADMIN role for files named `*grants.sql` and SYSADMIN for all other DDL scripts. This ensures proper privilege separation - SYSADMIN creates objects, SECURITYADMIN manages permissions.
+**Note:** With this setup, SYSADMIN can both create objects and manage their permissions, simplifying the deployment process.
 
 **Note:** If you want to use a different database/schema/table name, you can customize it using the `migrations_table` input parameter in the GitHub Actions workflow.
 
@@ -168,11 +168,8 @@ CREATE USER IF NOT EXISTS GH_ACTIONS_USER
   MUST_CHANGE_PASSWORD = FALSE
   COMMENT = 'Service account for GitHub Actions CI/CD deployments';
 
--- Grant SYSADMIN role (for DDL operations)
+-- Grant SYSADMIN role (for DDL and grant operations)
 GRANT ROLE SYSADMIN TO USER GH_ACTIONS_USER;
-
--- Grant SECURITYADMIN role (for grant operations)
-GRANT ROLE SECURITYADMIN TO USER GH_ACTIONS_USER;
 
 -- Grant usage on warehouses
 GRANT USAGE ON WAREHOUSE UTIL_WH TO ROLE SYSADMIN;
@@ -203,7 +200,8 @@ SHOW GRANTS TO ROLE SYSADMIN;
 ```
 
 **Security Notes:**
-- ✅ Use `SYSADMIN` role (not `ACCOUNTADMIN`) for DDL operations
+- ✅ Use `SYSADMIN` role for all DDL and grant operations
+- ✅ Grant `MANAGE GRANTS` privilege to SYSADMIN for permission management
 - ✅ Key-pair authentication is more secure than passwords
 - ✅ Service accounts provide better audit trails
 - ✅ Never commit private keys to the repository
