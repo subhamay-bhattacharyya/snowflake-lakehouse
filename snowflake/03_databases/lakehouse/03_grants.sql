@@ -3,8 +3,9 @@
 -- Description: Grant permissions on analytics database
 -- ============================================================================
 -- 
--- NOTE: This script runs with ACCOUNTADMIN role in the GitHub Actions workflow
--- The workflow automatically detects 'grants.sql' files and uses ACCOUNTADMIN
+-- NOTE: This script runs with SECURITYADMIN role in the GitHub Actions workflow
+-- The workflow automatically detects 'grants.sql' files and uses SECURITYADMIN
+-- SECURITYADMIN has the privilege to manage grants across the account
 -- ============================================================================
 
 -- ============================================================================
