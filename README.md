@@ -213,6 +213,8 @@ Set up GitHub Actions authentication. See [.github/SETUP.md](.github/SETUP.md) f
 **Variables** (Settings → Secrets and variables → Actions → Variables):
 - `SNOWFLAKE_ACCOUNT` - Your account identifier (e.g., `AGXUOKJ-JKC15404`)
 - `SNOWFLAKE_USER` - Service account username (e.g., `GH_ACTIONS_USER`)
+- `AWS_ROLE_ARN` - AWS IAM role ARN for S3 access (e.g., `arn:aws:iam::123456789012:role/snowflake-s3-role`)
+- `S3_BUCKET_NAME` - S3 bucket name for lakehouse data (e.g., `my-lakehouse-bucket`)
 
 **Secrets** (Settings → Secrets and variables → Actions → Secrets):
 - `SNOWFLAKE_PRIVATE_KEY` - Content of `snowflake_key.p8` file (including header/footer)
@@ -222,7 +224,11 @@ Set up GitHub Actions authentication. See [.github/SETUP.md](.github/SETUP.md) f
 ```
 SNOWFLAKE_ACCOUNT: AGXUOKJ-JKC15404
 SNOWFLAKE_USER: GH_ACTIONS_USER
+AWS_ROLE_ARN: arn:aws:iam::123456789012:role/snowflake-s3-access-role
+S3_BUCKET_NAME: my-lakehouse-bucket
 ```
+
+**Note:** The workflow automatically injects AWS variables into storage integration scripts and displays masked values in the deployment summary for verification.
 
 ## Snowflake Object Organization
 
