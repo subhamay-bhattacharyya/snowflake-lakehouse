@@ -15,6 +15,11 @@ on:
   #   paths:
   #     - 'snowflake/**'
   workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Release tag to deploy (leave empty for current branch)'
+        required: false
+        type: string
 
 jobs:
   find-sql-files:
@@ -24,9 +29,22 @@ jobs:
       warehouse_files: ${{ steps.find.outputs.warehouse_files }}
       database_files: ${{ steps.find.outputs.database_files }}
       table_files: ${{ steps.find.outputs.table_files }}
+      checkout_ref: ${{ steps.set-ref.outputs.ref }}
     steps:
+      - name: Set Checkout Ref
+        id: set-ref
+        shell: bash
+        run: |
+          if [[ -n "${{ inputs.release-tag }}" ]]; then
+            echo "ref=${{ inputs.release-tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.set-ref.outputs.ref }}
       
       - name: Find SQL Files
         id: find
@@ -90,6 +108,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
       
       - name: Deploy ${{ matrix.sql_file }}
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
@@ -107,6 +127,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
       
       - name: Placeholder Step
         run: |
@@ -128,6 +150,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
       
       - name: Deploy ${{ matrix.sql_file }}
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
@@ -164,13 +188,15 @@ jobs:
   deploy-storage:
     name: Deploy Storage Integration
     runs-on: ubuntu-latest
-    needs: [deploy-databases]
+    needs: [find-sql-files, deploy-databases]
     if: |
       always() &&
       (needs.deploy-databases.result == 'success' || needs.deploy-databases.result == 'skipped')
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
       
       - name: Inject AWS Variables
         run: |
@@ -258,6 +284,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
       
       - name: Install Snowflake CLI
         run: |
