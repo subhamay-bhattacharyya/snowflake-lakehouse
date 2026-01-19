@@ -130,7 +130,6 @@ jobs:
       backend-type: remote
       aws-region: ${{ vars.AWS_REGION }}
       tf-vars-file: terraform.tfvars
-      checkout-ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
     secrets:
       tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
       aws-role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
