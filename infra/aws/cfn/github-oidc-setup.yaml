@@ -21,9 +21,12 @@ Parameters:
     Description: Audience (client ID) expected in OIDC tokens. For GitHub Actions, use sts.amazonaws.com.
   ThumbprintList:
     Type: CommaDelimitedList
-    Default: 6938fd4d98bab03faadb97b34396831e3780aea1,1c58a1c4b5ce5b5f1f40f6a1c2a0013e4e27c0c6
+    Default: "6938fd4d98bab03faadb97b34396831e3780aea1"
     Description: >
-      SHA-1 thumbprints of the IdP's root certificates. Defaults are for GitHub Actions.
+      SHA-1 thumbprint of the IdP's root certificate. As of July 2023, AWS no longer validates
+      this for GitHub Actions OIDC - AWS uses its library of trusted root CAs instead.
+      This value is kept for CloudFormation compatibility but is not used for validation.
+      See: https://github.blog/changelog/2023-07-13-github-actions-oidc-integration-with-aws-no-longer-requires-pinning-of-intermediate-tls-certificates/
 
 Resources:
   GitHubOidcProvider:
