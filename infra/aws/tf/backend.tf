@@ -6,7 +6,7 @@ terraform {
     organization = "subhamay-bhattacharyya-projects"
 
     workspaces {
-      name = "snowflake-datalake"
+      name = "snowflake-datalake-aws"
     }
   }
 }
