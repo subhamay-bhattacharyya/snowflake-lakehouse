@@ -1,18 +1,19 @@
-name: Snowflake Deploy
+name: ❄️ Snowflake DDL Deployment
+run-name: Deploy Snowflake Objects to ${{ github.ref_name }} by @${{ github.actor }}
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - 'snowflake/**'
-  pull_request:
-    branches:
-      - main
-      - develop
-    paths:
-      - 'snowflake/**'
+  # push:
+  #   branches:
+  #     - main
+  #     - develop
+  #   paths:
+  #     - 'snowflake/**'
+  # pull_request:
+  #   branches:
+  #     - main
+  #     - develop
+  #   paths:
+  #     - 'snowflake/**'
   workflow_dispatch:
 
 jobs:
@@ -25,7 +26,7 @@ jobs:
       table_files: ${{ steps.find.outputs.table_files }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Find SQL Files
         id: find
@@ -38,13 +39,45 @@ jobs:
           DATABASE_FILES=$(find snowflake/03_databases -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
           echo "database_files=$DATABASE_FILES" >> $GITHUB_OUTPUT
           
-          # Find table files
-          TABLE_FILES=$(find snowflake/05_schemas -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
-          echo "table_files=$TABLE_FILES" >> $GITHUB_OUTPUT
+          # # Find table files
+          # TABLE_FILES=$(find snowflake/05_schemas -name "*.sql" -type f 2>/dev/null | sort | jq -R -s -c 'split("\n")[:-1]' || echo '[]')
+          # echo "table_files=$TABLE_FILES" >> $GITHUB_OUTPUT
           
           echo "Found warehouse files: $WAREHOUSE_FILES"
           echo "Found database files: $DATABASE_FILES"
-          echo "Found table files: $TABLE_FILES"
+          # echo "Found table files: $TABLE_FILES"
+          
+          # Print to GITHUB_STEP_SUMMARY
+          echo "## SQL Files Found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Category | File Path |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-----------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Add warehouse files to table
+          if [ "$WAREHOUSE_FILES" != "[]" ]; then
+            echo "$WAREHOUSE_FILES" | jq -r '.[]' | while read -r file; do
+              echo "| Warehouse | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          # Add database files to table
+          if [ "$DATABASE_FILES" != "[]" ]; then
+            echo "$DATABASE_FILES" | jq -r '.[]' | while read -r file; do
+              echo "| Database | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          # Add table files to table
+          # if [ "$TABLE_FILES" != "[]" ]; then
+          #   echo "$TABLE_FILES" | jq -r '.[]' | while read -r file; do
+          #     echo "| Table | \`$file\` |" >> $GITHUB_STEP_SUMMARY
+          #   done
+          # fi
+          
+          # If no files found at all
+          if [ "$WAREHOUSE_FILES" = "[]" ] && [ "$DATABASE_FILES" = "[]" ] && [ "$TABLE_FILES" = "[]" ]; then
+            echo "| - | _No SQL files found_ |" >> $GITHUB_STEP_SUMMARY
+          fi
 
   deploy-warehouses:
     name: Deploy Warehouse
@@ -56,7 +89,7 @@ jobs:
         sql_file: ${{ fromJson(needs.find-sql-files.outputs.warehouse_files) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Deploy ${{ matrix.sql_file }}
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
@@ -64,11 +97,7 @@ jobs:
           account: ${{ vars.SNOWFLAKE_ACCOUNT }}
           user: ${{ vars.SNOWFLAKE_USER }}
           private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
-          role: ${{ vars.SNOWFLAKE_ROLE }}
-          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
-          database: ${{ vars.SNOWFLAKE_DATABASE }}
-          schema: PUBLIC
+          role: SYSADMIN
           script: ${{ matrix.sql_file }}
 
   deploy-databases:
@@ -84,7 +113,7 @@ jobs:
         sql_file: ${{ fromJson(needs.find-sql-files.outputs.database_files) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Deploy ${{ matrix.sql_file }}
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
@@ -92,37 +121,307 @@ jobs:
           account: ${{ vars.SNOWFLAKE_ACCOUNT }}
           user: ${{ vars.SNOWFLAKE_USER }}
           private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
-          role: ${{ vars.SNOWFLAKE_ROLE }}
-          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
-          database: ${{ vars.SNOWFLAKE_DATABASE }}
-          schema: PUBLIC
+          role: SYSADMIN
           script: ${{ matrix.sql_file }}
 
-  deploy-tables:
-    name: Deploy Table
+  # deploy-tables:
+  #   name: Deploy Table
+  #   runs-on: ubuntu-latest
+  #   needs: [find-sql-files, deploy-databases]
+  #   if: |
+  #     always() &&
+  #     needs.find-sql-files.outputs.table_files != '[]' &&
+  #     (needs.deploy-databases.result == 'success' || needs.deploy-databases.result == 'skipped')
+  #   strategy:
+  #     matrix:
+  #       sql_file: ${{ fromJson(needs.find-sql-files.outputs.table_files) }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+      
+  #     - name: Deploy ${{ matrix.sql_file }}
+  #       uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
+  #       with:
+  #         account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+  #         user: ${{ vars.SNOWFLAKE_USER }}
+  #         private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+  #         script: ${{ matrix.sql_file }}
+
+  deploy-storage:
+    name: Deploy Storage Integration
     runs-on: ubuntu-latest
-    needs: [find-sql-files, deploy-databases]
+    needs: [deploy-databases]
     if: |
       always() &&
-      needs.find-sql-files.outputs.table_files != '[]' &&
       (needs.deploy-databases.result == 'success' || needs.deploy-databases.result == 'skipped')
-    strategy:
-      matrix:
-        sql_file: ${{ fromJson(needs.find-sql-files.outputs.table_files) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
-      - name: Deploy ${{ matrix.sql_file }}
+      - name: Inject AWS Variables
+        run: |
+          echo "## 🔧 Injecting AWS Configuration Variables" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Mask the full values for security
+          AWS_ROLE_ARN="${{ vars.AWS_ROLE_ARN }}"
+          S3_BUCKET_NAME="${{ vars.S3_BUCKET_NAME }}"
+          
+          # Extract and display masked values
+          if [ -n "$AWS_ROLE_ARN" ]; then
+            # Extract account ID and role name for display
+            ACCOUNT_ID=$(echo "$AWS_ROLE_ARN" | grep -oP '(?<=iam::)\d+(?=:role)')
+            ROLE_NAME=$(echo "$AWS_ROLE_ARN" | grep -oP '(?<=role/)[^/]+$')
+            MASKED_ACCOUNT="***${ACCOUNT_ID: -4}"
+            echo "✅ AWS Role ARN: arn:aws:iam::${MASKED_ACCOUNT}:role/${ROLE_NAME}"
+            echo "| Variable | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| AWS Account | \`***${ACCOUNT_ID: -4}\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| IAM Role | \`${ROLE_NAME}\` |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ AWS_ROLE_ARN not set"
+            echo "| Variable | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| AWS Role ARN | ⚠️ Not configured |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -n "$S3_BUCKET_NAME" ]; then
+            # Mask middle part of bucket name
+            BUCKET_LEN=${#S3_BUCKET_NAME}
+            if [ $BUCKET_LEN -gt 8 ]; then
+              MASKED_BUCKET="${S3_BUCKET_NAME:0:3}***${S3_BUCKET_NAME: -3}"
+            else
+              MASKED_BUCKET="${S3_BUCKET_NAME:0:2}***"
+            fi
+            echo "✅ S3 Bucket: ${MASKED_BUCKET}"
+            echo "| S3 Bucket | \`${MASKED_BUCKET}\` |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ S3_BUCKET_NAME not set"
+            echo "| S3 Bucket | ⚠️ Not configured |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Inject variables into storage integration script
+          if [ -f "snowflake/04_storage/aws/01_storage_integration.sql" ]; then
+            sed -i "s|SET aws_role_arn = '.*';|SET aws_role_arn = '${AWS_ROLE_ARN}';|g" \
+              snowflake/04_storage/aws/01_storage_integration.sql
+            sed -i "s|SET s3_bucket_name = '.*';|SET s3_bucket_name = '${S3_BUCKET_NAME}';|g" \
+              snowflake/04_storage/aws/01_storage_integration.sql
+            echo "✅ Variables injected into storage integration script"
+          fi
+          
+          # Inject variables into external stages script
+          if [ -f "snowflake/04_storage/aws/02_external_stages.sql" ]; then
+            sed -i "s|your-bucket-name|${S3_BUCKET_NAME}|g" \
+              snowflake/04_storage/aws/02_external_stages.sql
+            echo "✅ Variables injected into external stages script"
+          fi
+      
+      - name: Deploy Storage Integration
         uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
         with:
           account: ${{ vars.SNOWFLAKE_ACCOUNT }}
           user: ${{ vars.SNOWFLAKE_USER }}
           private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          private_key_passphrase: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
-          role: ${{ vars.SNOWFLAKE_ROLE }}
-          warehouse: ${{ vars.SNOWFLAKE_WAREHOUSE }}
-          database: ${{ vars.SNOWFLAKE_DATABASE }}
-          schema: sales
-          script: ${{ matrix.sql_file }}
+          role: ACCOUNTADMIN
+          script: snowflake/04_storage/aws/01_storage_integration.sql
+      
+      - name: Deploy External Stages
+        uses: subhamay-bhattacharyya-gha/snowflake-run-ddl-action@feature/GHA-0001-implement-reusable-github
+        with:
+          account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          user: ${{ vars.SNOWFLAKE_USER }}
+          private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          role: SYSADMIN
+          script: snowflake/04_storage/aws/02_external_stages.sql
+
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [find-sql-files, deploy-warehouses, deploy-databases, deploy-storage]
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      
+      - name: Install Snowflake CLI
+        run: |
+          pip install snowflake-connector-python
+      
+      - name: Query Migration History
+        id: migration_history
+        continue-on-error: true
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import snowflake.connector
+          import os
+          import json
+          from cryptography.hazmat.primitives import serialization
+          from cryptography.hazmat.backends import default_backend
+          
+          # Load private key
+          private_key_pem = os.environ['SNOWFLAKE_PRIVATE_KEY']
+          
+          p_key = serialization.load_pem_private_key(
+              private_key_pem.encode(),
+              password=None,
+              backend=default_backend()
+          )
+          
+          pkb = p_key.private_bytes(
+              encoding=serialization.Encoding.DER,
+              format=serialization.PrivateFormat.PKCS8,
+              encryption_algorithm=serialization.NoEncryption()
+          )
+          
+          # Connect to Snowflake
+          conn = snowflake.connector.connect(
+              account=os.environ['SNOWFLAKE_ACCOUNT'],
+              user=os.environ['SNOWFLAKE_USER'],
+              private_key=pkb,
+              role='SYSADMIN'
+          )
+          
+          cursor = conn.cursor()
+          
+          try:
+              cursor.execute("""
+                  SELECT 
+                      script_name,
+                      script_path,
+                      status,
+                      TO_CHAR(applied_at, 'YYYY-MM-DD HH24:MI:SS') as applied_at,
+                      actor
+                  FROM UTIL_DB.UTIL_SCHEMA.DDL_MIGRATION_HISTORY
+                  ORDER BY applied_at DESC
+                  LIMIT 20
+              """)
+              
+              results = cursor.fetchall()
+              
+              # Write results to file
+              with open('migration_history.txt', 'w') as f:
+                  for row in results:
+                      f.write(f"{row[0]}|{row[1]}|{row[2]}|{row[3]}|{row[4]}\n")
+              
+              print(f"Found {len(results)} migration records")
+              
+          except Exception as e:
+              print(f"Query failed: {e}")
+              with open('migration_history.txt', 'w') as f:
+                  f.write("ERROR|Query failed|N/A|N/A|N/A\n")
+          finally:
+              cursor.close()
+              conn.close()
+          PYTHON_SCRIPT
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ vars.SNOWFLAKE_USER }}
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      
+      - name: Generate Deployment Summary
+        run: |
+          echo "# 🎯 Snowflake Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Job Status Summary
+          echo "## 📊 Job Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Find SQL Files | ${{ needs.find-sql-files.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Warehouses | ${{ needs.deploy-warehouses.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Databases | ${{ needs.deploy-databases.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Storage | ${{ needs.deploy-storage.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Objects Deployed Summary
+          echo "## 🗄️ Database Objects Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count files
+          WAREHOUSE_COUNT=$(echo '${{ needs.find-sql-files.outputs.warehouse_files }}' | jq '. | length')
+          DATABASE_COUNT=$(echo '${{ needs.find-sql-files.outputs.database_files }}' | jq '. | length')
+          TOTAL_COUNT=$((WAREHOUSE_COUNT + DATABASE_COUNT))
+          
+          echo "| Object Type | Count | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏭 Warehouses | $WAREHOUSE_COUNT | ${{ needs.deploy-warehouses.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🗃️ Databases | $DATABASE_COUNT | ${{ needs.deploy-databases.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total** | **$TOTAL_COUNT** | - |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Detailed File List
+          echo "## 📝 Deployed Scripts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Warehouses
+          if [ "$WAREHOUSE_COUNT" -gt 0 ]; then
+            echo "### 🏭 Warehouses ($WAREHOUSE_COUNT)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '${{ needs.find-sql-files.outputs.warehouse_files }}' | jq -r '.[]' | while read -r file; do
+              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Databases
+          if [ "$DATABASE_COUNT" -gt 0 ]; then
+            echo "### 🗃️ Databases ($DATABASE_COUNT)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '${{ needs.find-sql-files.outputs.database_files }}' | jq -r '.[]' | while read -r file; do
+              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Migration History
+          echo "## 📜 Migration History (Last 20 Deployments - Most Recent First)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f migration_history.txt ] && [ -s migration_history.txt ]; then
+            echo "| Script Name | Path | Status | Applied At | Actor |" >> $GITHUB_STEP_SUMMARY
+            echo "|-------------|------|--------|------------|-------|" >> $GITHUB_STEP_SUMMARY
+            
+            while IFS='|' read -r script_name script_path status applied_at actor; do
+              # Truncate long paths for readability
+              short_path=$(echo "$script_path" | awk -F'/' '{print $(NF-1)"/"$NF}')
+              echo "| \`$script_name\` | \`$short_path\` | $status | $applied_at | $actor |" >> $GITHUB_STEP_SUMMARY
+            done < migration_history.txt
+          else
+            echo "_No migration history available. This is normal for first-time deployments._" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall Status
+          echo "## ✅ Overall Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.deploy-warehouses.result }}" == "success" ] || [ "${{ needs.deploy-warehouses.result }}" == "skipped" ]; then
+            if [ "${{ needs.deploy-databases.result }}" == "success" ] || [ "${{ needs.deploy-databases.result }}" == "skipped" ]; then
+              if [ "${{ needs.deploy-storage.result }}" == "success" ] || [ "${{ needs.deploy-storage.result }}" == "skipped" ]; then
+                echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "All database objects and storage integrations have been deployed to Snowflake." >> $GITHUB_STEP_SUMMARY
+              else
+                echo "⚠️ **Deployment completed with warnings**" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "Storage integration deployment may have failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              echo "❌ **Deployment failed at database stage**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Database deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **Deployment failed at warehouse stage**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Warehouse deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+          fi
