@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Set up an IAM OIDC Identity Provider and IAM Role for GitHub Actions
+  to assume via OpenID Connect (OIDC).
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Description: GitHub organization or user name (e.g. subhamay-bhattacharyya)
+  GitHubRepo:
+    Type: String
+    Description: GitHub repository name (e.g. my-infra-repo)
+  
+  # ============================================================================
+  # OPTIONAL PARAMETERS - Only needed if creating a new OIDC provider
+  # ============================================================================
+  # The following parameters are commented out because this template assumes
+  # a GitHub OIDC provider already exists in your AWS account.
+  # 
+  # If you need to create a new OIDC provider, uncomment these parameters
+  # and the GitHubOidcProvider resource below.
+  # ============================================================================
+  
+  # ProviderUrl:
+  #   Type: String
+  #   Default: https://token.actions.githubusercontent.com
+  #   Description: >
+  #     OIDC issuer URL for GitHub Actions (or another OIDC IdP if you customize this template).
+  Audience:
+    Type: String
+    Default: sts.amazonaws.com
+    Description: Audience (client ID) expected in OIDC tokens. For GitHub Actions, use sts.amazonaws.com.
+  # ThumbprintList:
+  #   Type: CommaDelimitedList
+  #   Default: 6938fd4d98bab03faadb97b34396831e3780aea1,1c58a1c4b5ce5b5f1f40f6a1c2a0013e4e27c0c6
+  #   Description: >
+  #     SHA-1 thumbprints of the IdP's root certificates. Defaults are for GitHub Actions.
+
+Resources:
+  # ============================================================================
+  # OIDC PROVIDER - Only create if one doesn't already exist
+  # ============================================================================
+  # This resource is commented out because the template assumes you already have
+  # a GitHub OIDC provider configured in your AWS account.
+  #
+  # If this is your FIRST GitHub Actions OIDC setup in this AWS account,
+  # uncomment this resource to create the OIDC provider.
+  #
+  # To check if an OIDC provider exists:
+  #   aws iam list-open-id-connect-providers
+  #
+  # If you see "token.actions.githubusercontent.com" in the output, you already
+  # have an OIDC provider and should keep this section commented.
+  # ============================================================================
+  
+  # GitHubOidcProvider:
+  #   Type: AWS::IAM::OIDCProvider
+  #   Properties:
+  #     Url: !Ref ProviderUrl
+  #     ClientIdList:
+  #       - !Ref Audience
+  #     ThumbprintList: !Ref ThumbprintList
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "snowflake-lakehouse-oidc-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              # ============================================================================
+              # FEDERATED PRINCIPAL - References existing OIDC provider
+              # ============================================================================
+              # This line references an EXISTING OIDC provider in your account.
+              # If you uncommented GitHubOidcProvider above, change this to:
+              #   Federated: !Ref GitHubOidcProvider
+              # ============================================================================
+              # Federated: !Ref GitHubOidcProvider  # Use this if creating new provider
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: !Ref Audience
+              StringLike:
+                # Only allow this specific repo to assume the role
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${GitHubRepo}:*"
+      # 🔐 Attach a basic managed policy (adjust as needed)
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Description: Role assumed by GitHub Actions via OIDC
+
+Outputs:
+  # ============================================================================
+  # OIDC PROVIDER OUTPUT - Only needed if creating new provider
+  # ============================================================================
+  # Uncomment this output if you uncommented the GitHubOidcProvider resource
+  # ============================================================================
+  
+  # OidcProviderArn:
+  #   Description: ARN of the IAM OIDC provider
+  #   Value: !Ref GitHubOidcProvider
+
+  GitHubActionsRoleArn:
+    Description: ARN of the IAM Role for GitHub Actions
+    Value: !GetAtt GitHubActionsRole.Arn

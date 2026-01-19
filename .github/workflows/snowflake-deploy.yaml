@@ -122,18 +122,18 @@ jobs:
 
   deploy-external-stage-aws:
     name: Deploy AWS S3 Bucket and Role
-    runs-on: ubuntu-latest
+    uses: subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/.github/workflows/terraform-deploy.yaml@feature/GHA-0011-add-tflint-in-the-workflo
     needs: find-sql-files
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
-      
-      - name: Placeholder Step
-        run: |
-          echo "Hello World !"
-          echo "External stage deployment will be implemented here"
+    with:
+      cloud-provider: aws
+      tflint-ver: ${{ vars.TF_LINT_VER }}
+      backend-type: remote
+      aws-region: ${{ vars.AWS_REGION }}
+      tf-vars-file: terraform.tfvars
+      checkout-ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
+    secrets:
+      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      aws-role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
 
   deploy-external-stage-gcp:
     name: Deploy GCP Storage
@@ -411,7 +411,9 @@ jobs:
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Find SQL Files | ${{ needs.find-sql-files.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Warehouses | ${{ needs.deploy-warehouses.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Deploy External Stage | ${{ needs.deploy-external-stage.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy External Stage (AWS) | ${{ needs.deploy-external-stage-aws.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy External Stage (GCP) | ${{ needs.deploy-external-stage-gcp.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy External Stage (Azure) | ${{ needs.deploy-external-stage-azure.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Databases | ${{ needs.deploy-databases.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Storage | ${{ needs.deploy-storage.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -480,26 +482,38 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.deploy-warehouses.result }}" == "success" ] || [ "${{ needs.deploy-warehouses.result }}" == "skipped" ]; then
-            if [ "${{ needs.deploy-external-stage.result }}" == "success" ] || [ "${{ needs.deploy-external-stage.result }}" == "skipped" ]; then
-              if [ "${{ needs.deploy-databases.result }}" == "success" ] || [ "${{ needs.deploy-databases.result }}" == "skipped" ]; then
-                if [ "${{ needs.deploy-storage.result }}" == "success" ] || [ "${{ needs.deploy-storage.result }}" == "skipped" ]; then
-                  echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
-                  echo "" >> $GITHUB_STEP_SUMMARY
-                  echo "All database objects and storage integrations have been deployed to Snowflake." >> $GITHUB_STEP_SUMMARY
+            if [ "${{ needs.deploy-external-stage-aws.result }}" == "success" ] || [ "${{ needs.deploy-external-stage-aws.result }}" == "skipped" ]; then
+              if [ "${{ needs.deploy-external-stage-gcp.result }}" == "success" ] || [ "${{ needs.deploy-external-stage-gcp.result }}" == "skipped" ]; then
+                if [ "${{ needs.deploy-external-stage-azure.result }}" == "success" ] || [ "${{ needs.deploy-external-stage-azure.result }}" == "skipped" ]; then
+                  if [ "${{ needs.deploy-databases.result }}" == "success" ] || [ "${{ needs.deploy-databases.result }}" == "skipped" ]; then
+                    if [ "${{ needs.deploy-storage.result }}" == "success" ] || [ "${{ needs.deploy-storage.result }}" == "skipped" ]; then
+                      echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+                      echo "" >> $GITHUB_STEP_SUMMARY
+                      echo "All database objects and storage integrations have been deployed to Snowflake." >> $GITHUB_STEP_SUMMARY
+                    else
+                      echo "⚠️ **Deployment completed with warnings**" >> $GITHUB_STEP_SUMMARY
+                      echo "" >> $GITHUB_STEP_SUMMARY
+                      echo "Storage integration deployment may have failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+                    fi
+                  else
+                    echo "❌ **Deployment failed at database stage**" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "Database deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+                  fi
                 else
-                  echo "⚠️ **Deployment completed with warnings**" >> $GITHUB_STEP_SUMMARY
+                  echo "❌ **Deployment failed at external stage (Azure)**" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
-                  echo "Storage integration deployment may have failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+                  echo "Azure external stage deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
                 fi
               else
-                echo "❌ **Deployment failed at database stage**" >> $GITHUB_STEP_SUMMARY
+                echo "❌ **Deployment failed at external stage (GCP)**" >> $GITHUB_STEP_SUMMARY
                 echo "" >> $GITHUB_STEP_SUMMARY
-                echo "Database deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+                echo "GCP external stage deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
               fi
             else
-              echo "❌ **Deployment failed at external stage**" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Deployment failed at external stage (AWS)**" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "External stage deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+              echo "AWS external stage deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "❌ **Deployment failed at warehouse stage**" >> $GITHUB_STEP_SUMMARY

@@ -230,6 +230,18 @@ S3_BUCKET_NAME: my-lakehouse-bucket
 
 **Note:** The workflow automatically injects AWS variables into storage integration scripts and displays masked values in the deployment summary for verification.
 
+### 3. AWS OIDC Setup (Optional but Recommended)
+
+For secure GitHub Actions authentication with AWS without long-lived credentials, set up OIDC (OpenID Connect). This eliminates the need to store AWS access keys in GitHub Secrets.
+
+**See detailed setup instructions:** [infra/aws/README.md](infra/aws/README.md)
+
+**Benefits:**
+- ✅ No AWS access keys stored in GitHub Secrets
+- ✅ Short-lived tokens that expire automatically
+- ✅ Improved security posture
+- ✅ Recommended by AWS and GitHub
+
 ## Snowflake Object Organization
 
 Scripts are organized by execution order:
