@@ -120,8 +120,38 @@ jobs:
           role: SYSADMIN
           script: ${{ matrix.sql_file }}
 
-  deploy-external-stage:
-    name: Deploy External Stage
+  deploy-external-stage-aws:
+    name: Deploy AWS S3 Bucket and Role
+    runs-on: ubuntu-latest
+    needs: find-sql-files
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
+      
+      - name: Placeholder Step
+        run: |
+          echo "Hello World !"
+          echo "External stage deployment will be implemented here"
+
+  deploy-external-stage-gcp:
+    name: Deploy GCP Storage
+    runs-on: ubuntu-latest
+    needs: find-sql-files
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.find-sql-files.outputs.checkout_ref }}
+      
+      - name: Placeholder Step
+        run: |
+          echo "Hello World !"
+          echo "External stage deployment will be implemented here"
+
+  deploy-external-stage-azure:
+    name: Deploy Azure Blob Storage
     runs-on: ubuntu-latest
     needs: find-sql-files
     steps:
@@ -138,12 +168,14 @@ jobs:
   deploy-databases:
     name: Deploy Database
     runs-on: ubuntu-latest
-    needs: [find-sql-files, deploy-warehouses, deploy-external-stage]
+    needs: [find-sql-files, deploy-warehouses, deploy-external-stage-aws, deploy-external-stage-gcp, deploy-external-stage-azure]
     if: |
       always() &&
       needs.find-sql-files.outputs.database_files != '[]' &&
       (needs.deploy-warehouses.result == 'success' || needs.deploy-warehouses.result == 'skipped') &&
-      (needs.deploy-external-stage.result == 'success' || needs.deploy-external-stage.result == 'skipped')
+      (needs.deploy-external-stage-aws.result == 'success' || needs.deploy-external-stage-aws.result == 'skipped') &&
+      (needs.deploy-external-stage-gcp.result == 'success' || needs.deploy-external-stage-gcp.result == 'skipped') &&
+      (needs.deploy-external-stage-azure.result == 'success' || needs.deploy-external-stage-azure.result == 'skipped')
     strategy:
       matrix:
         sql_file: ${{ fromJson(needs.find-sql-files.outputs.database_files) }}
