@@ -20,7 +20,7 @@ variable "environment" {
 variable "project_name" {
   description = "Project name for resource naming"
   type        = string
-  default     = "snowflake-lakehouse"
+  default     = "snw-lkh"
 }
 variable "snowflake_external_id" {
   description = "Snowflake external ID for IAM role trust relationship"
@@ -33,7 +33,6 @@ variable "snowflake_principal_arn" {
   type        = string
   default     = ""
 }
-
 # variable "enable_s3_notifications" {
 #   description = "Enable S3 event notifications for Snowpipe"
 #   type        = bool

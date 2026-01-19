@@ -10,7 +10,7 @@ locals {
   s3_bucket_config = jsondecode(file("./input-jsons/s3-bucket.json"))
 
   s3_bucket = {
-    bucket_name   = "${local.s3_bucket_config["s3-bucket-name"]}-${local.current_region}"
+    bucket_name   = "${var.project_name}-${local.s3_bucket_config["s3-bucket-name"]}-${var.environment}-${local.current_region}"
     versioning    = local.s3_bucket_config["s3-versioning"],
     kms_key_alias = startswith(local.s3_bucket_config["kms-key-alias"], "alias/") ? local.s3_bucket_config["kms-key-alias"] : "alias/${local.s3_bucket_config["kms-key-alias"]}"
     bucket_policy = templatefile("./templates/s3-bucket-policy.tpl", {
