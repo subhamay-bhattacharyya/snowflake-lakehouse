@@ -63,7 +63,7 @@ cd infra/aws/cfn
 
 aws cloudformation deploy \
   --template-file github-oidc-setup.yaml \
-  --stack-name github-oidc-setup \
+  --stack-name github-oidc-setup-snowflake-lakehouse \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
     GitHubOrg=subhamay-bhattacharyya \

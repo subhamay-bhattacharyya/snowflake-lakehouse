@@ -64,7 +64,7 @@ Resources:
   GitHubActionsRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "snowflake-lakehouse-oidc-role"
+      RoleName: "github-oidc-role-snowflake-lakehouse"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
