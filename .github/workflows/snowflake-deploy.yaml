@@ -311,7 +311,7 @@ jobs:
   deployment-summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [find-sql-files, deploy-warehouses, deploy-external-stage, deploy-databases, deploy-storage]
+    needs: [find-sql-files, deploy-warehouses, deploy-external-stage-aws, deploy-external-stage-gcp, deploy-external-stage-azure, deploy-databases, deploy-storage]
     if: always()
     steps:
       - name: Checkout
