@@ -1,6 +1,6 @@
 {
     "storage-name": "lakehouse",
-    "s3-bucket-name": "subhamay-snowflake-lakehouse",
+    "s3-bucket-name": "sb-snowflake-lakehouse",
     "s3-versioning": true,
     "kms-key-alias": "alias/SB-KMS"
 }
