@@ -2,6 +2,7 @@
 
 terraform {
   cloud {
+
     organization = "subhamay-bhattacharyya-projects"
 
     workspaces {
