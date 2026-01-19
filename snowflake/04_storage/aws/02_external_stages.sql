@@ -3,6 +3,12 @@
 -- Description: Create external stages for S3 data access
 -- ============================================================================
 -- 
+-- NOTE: No warehouse is required to create external stages
+-- Warehouses are only needed when:
+--   - Listing files: LIST @stage_name
+--   - Loading data: COPY INTO table FROM @stage_name
+--   - Querying data: SELECT * FROM @stage_name
+-- 
 -- PREREQUISITE: Storage integration must be created first
 -- See: 01_storage_integration.sql
 -- ============================================================================
@@ -84,10 +90,22 @@ CREATE OR REPLACE FILE FORMAT BRONZE.csv_format
 -- Description: List all stages and test connectivity
 -- ============================================================================
 
--- List all stages in the database
+-- List all stages in the database (no warehouse required)
 SHOW STAGES IN DATABASE LAKEHOUSE_DB;
 
--- Test stage connectivity (uncomment to test)
+-- ============================================================================
+-- Testing Stage Connectivity (REQUIRES WAREHOUSE)
+-- Description: Uncomment and run these commands to test stage access
+-- NOTE: You must have a warehouse running to execute these commands
+-- ============================================================================
+
+-- Set a warehouse for testing (uncomment to use)
+-- USE WAREHOUSE COMPUTE_WH;
+
+-- Test stage connectivity by listing files (requires warehouse)
 -- LIST @BRONZE.s3_bronze_stage;
 -- LIST @SILVER.s3_silver_stage;
 -- LIST @GOLD.s3_gold_stage;
+
+-- Query data directly from stage (requires warehouse)
+-- SELECT $1, $2, $3 FROM @BRONZE.s3_bronze_stage (FILE_FORMAT => 'BRONZE.csv_format') LIMIT 10;

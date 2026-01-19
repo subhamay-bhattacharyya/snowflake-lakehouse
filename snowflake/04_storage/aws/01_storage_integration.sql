@@ -3,11 +3,14 @@
 -- Description: Create storage integration for AWS S3 access
 -- ============================================================================
 -- 
+-- NOTE: No warehouse is required to create storage integration
+-- Warehouses are only needed when querying or loading data from stages
+-- 
 -- CONFIGURATION: Set these variables before running this script
 -- Option 1: Set via SQL variables (recommended for CI/CD)
 -- Option 2: Replace placeholders manually
 -- 
--- NOTE: After creating this integration, you must:
+-- AFTER CREATION: You must configure AWS IAM trust policy
 -- 1. Run: DESC STORAGE INTEGRATION aws_s3_integration;
 -- 2. Copy the STORAGE_AWS_IAM_USER_ARN and STORAGE_AWS_EXTERNAL_ID
 -- 3. Update your AWS IAM role trust policy with these values
@@ -18,7 +21,7 @@ SET aws_role_arn = 'arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/snowflake-s3-access-ro
 SET s3_bucket_name = 'your-bucket-name';
 
 -- Create storage integration for AWS S3
--- This allows Snowflake to securely access S3 buckets
+-- This is a metadata operation - no warehouse required
 CREATE OR REPLACE STORAGE INTEGRATION aws_s3_integration
     TYPE = EXTERNAL_STAGE
     STORAGE_PROVIDER = 'S3'

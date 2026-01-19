@@ -100,14 +100,28 @@ jobs:
           role: SYSADMIN
           script: ${{ matrix.sql_file }}
 
+  deploy-external-stage:
+    name: Deploy External Stage
+    runs-on: ubuntu-latest
+    needs: find-sql-files
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      
+      - name: Placeholder Step
+        run: |
+          echo "Hello World !"
+          echo "External stage deployment will be implemented here"
+
   deploy-databases:
     name: Deploy Database
     runs-on: ubuntu-latest
-    needs: [find-sql-files, deploy-warehouses]
+    needs: [find-sql-files, deploy-warehouses, deploy-external-stage]
     if: |
       always() &&
       needs.find-sql-files.outputs.database_files != '[]' &&
-      (needs.deploy-warehouses.result == 'success' || needs.deploy-warehouses.result == 'skipped')
+      (needs.deploy-warehouses.result == 'success' || needs.deploy-warehouses.result == 'skipped') &&
+      (needs.deploy-external-stage.result == 'success' || needs.deploy-external-stage.result == 'skipped')
     strategy:
       matrix:
         sql_file: ${{ fromJson(needs.find-sql-files.outputs.database_files) }}
@@ -239,7 +253,7 @@ jobs:
   deployment-summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [find-sql-files, deploy-warehouses, deploy-databases, deploy-storage]
+    needs: [find-sql-files, deploy-warehouses, deploy-external-stage, deploy-databases, deploy-storage]
     if: always()
     steps:
       - name: Checkout
@@ -337,6 +351,7 @@ jobs:
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Find SQL Files | ${{ needs.find-sql-files.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Warehouses | ${{ needs.deploy-warehouses.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy External Stage | ${{ needs.deploy-external-stage.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Databases | ${{ needs.deploy-databases.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Storage | ${{ needs.deploy-storage.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -405,20 +420,26 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.deploy-warehouses.result }}" == "success" ] || [ "${{ needs.deploy-warehouses.result }}" == "skipped" ]; then
-            if [ "${{ needs.deploy-databases.result }}" == "success" ] || [ "${{ needs.deploy-databases.result }}" == "skipped" ]; then
-              if [ "${{ needs.deploy-storage.result }}" == "success" ] || [ "${{ needs.deploy-storage.result }}" == "skipped" ]; then
-                echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
-                echo "" >> $GITHUB_STEP_SUMMARY
-                echo "All database objects and storage integrations have been deployed to Snowflake." >> $GITHUB_STEP_SUMMARY
+            if [ "${{ needs.deploy-external-stage.result }}" == "success" ] || [ "${{ needs.deploy-external-stage.result }}" == "skipped" ]; then
+              if [ "${{ needs.deploy-databases.result }}" == "success" ] || [ "${{ needs.deploy-databases.result }}" == "skipped" ]; then
+                if [ "${{ needs.deploy-storage.result }}" == "success" ] || [ "${{ needs.deploy-storage.result }}" == "skipped" ]; then
+                  echo "✅ **Deployment completed successfully!**" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "All database objects and storage integrations have been deployed to Snowflake." >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "⚠️ **Deployment completed with warnings**" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "Storage integration deployment may have failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+                fi
               else
-                echo "⚠️ **Deployment completed with warnings**" >> $GITHUB_STEP_SUMMARY
+                echo "❌ **Deployment failed at database stage**" >> $GITHUB_STEP_SUMMARY
                 echo "" >> $GITHUB_STEP_SUMMARY
-                echo "Storage integration deployment may have failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+                echo "Database deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
               fi
             else
-              echo "❌ **Deployment failed at database stage**" >> $GITHUB_STEP_SUMMARY
+              echo "❌ **Deployment failed at external stage**" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "Database deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
+              echo "External stage deployment failed. Check the logs above." >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "❌ **Deployment failed at warehouse stage**" >> $GITHUB_STEP_SUMMARY

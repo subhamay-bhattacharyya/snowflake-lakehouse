@@ -15,6 +15,10 @@ This directory contains DDL scripts for setting up AWS S3 storage integration wi
 
 2. **AWS IAM Role**: Create an IAM role with S3 access permissions
 
+3. **Snowflake Warehouse** (Optional for creation, required for usage):
+   - NOT required to create storage integrations and stages
+   - REQUIRED to list files, load data, or query from stages
+
 ## Setup Steps
 
 ### Step 1: Update Configuration
@@ -106,7 +110,12 @@ USE ROLE SYSADMIN;
 
 ### Step 6: Test Connectivity
 
+**Note:** Testing requires a warehouse to be running.
+
 ```sql
+-- Set a warehouse
+USE WAREHOUSE COMPUTE_WH;
+
 -- List files in bronze stage
 LIST @BRONZE.s3_bronze_stage;
 
@@ -115,6 +124,11 @@ LIST @SILVER.s3_silver_stage;
 
 -- List files in gold stage
 LIST @GOLD.s3_gold_stage;
+
+-- Query data directly from stage
+SELECT $1, $2, $3 
+FROM @BRONZE.s3_bronze_stage 
+LIMIT 10;
 ```
 
 ## File Formats
@@ -125,6 +139,25 @@ The stages are configured with the following file formats:
 - **Silver**: Parquet with Snappy compression
 - **Gold**: Parquet with Snappy compression
 - **CSV Format**: Available for CSV data ingestion
+
+## When Do You Need a Warehouse?
+
+### ❌ Warehouse NOT Required:
+- Creating storage integrations
+- Creating external stages
+- Creating file formats
+- Granting permissions on stages
+- Describing storage integrations
+- Showing stages
+
+### ✅ Warehouse REQUIRED:
+- Listing files in stages (`LIST @stage_name`)
+- Loading data (`COPY INTO table FROM @stage_name`)
+- Querying data from stages (`SELECT * FROM @stage_name`)
+- Creating tables from stage data
+- Running Snowpipe (uses serverless compute, not your warehouse)
+
+**Best Practice:** Create storage integrations and stages first (no warehouse needed), then use a warehouse only when you need to interact with the data.
 
 ## Troubleshooting
 

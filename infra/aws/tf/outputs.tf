@@ -1,33 +1,15 @@
-# ============================================================================
-# AWS Infrastructure Outputs
-# ============================================================================
+# --- root/aws/tf/root/outputs.tf ---
 
-output "raw_data_bucket_name" {
-  description = "Name of the raw data S3 bucket"
-  value       = aws_s3_bucket.raw_data.id
+############ S3 Bucket Outputs ############################
+output "s3_bucket_name" {
+  description = "S3 bucket name used for static website"
+  value       = module.s3.s3_bucket_name
 }
-
-output "raw_data_bucket_arn" {
-  description = "ARN of the raw data S3 bucket"
-  value       = aws_s3_bucket.raw_data.arn
+output "s3_bucket_region" {
+  description = "S3 bucket region"
+  value       = module.s3.s3_bucket_region
 }
-
-output "processed_data_bucket_name" {
-  description = "Name of the processed data S3 bucket"
-  value       = aws_s3_bucket.processed_data.id
-}
-
-output "processed_data_bucket_arn" {
-  description = "ARN of the processed data S3 bucket"
-  value       = aws_s3_bucket.processed_data.arn
-}
-
-output "snowflake_role_arn" {
-  description = "ARN of the IAM role for Snowflake"
-  value       = aws_iam_role.snowflake_role.arn
-}
-
-output "snowflake_role_name" {
-  description = "Name of the IAM role for Snowflake"
-  value       = aws_iam_role.snowflake_role.name
+output "s3_bucket_arn" {
+  description = "S3 bucket ARN"
+  value       = module.s3.s3_bucket_arn
 }
