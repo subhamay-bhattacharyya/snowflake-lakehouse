@@ -42,12 +42,8 @@ jobs:
       backend-type: remote
       terraform-dir: snowflake/tf
       tf-vars-file: terraform.tfvars
-    secrets:
-      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      snowflake-account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-      snowflake-user: ${{ vars.SNOWFLAKE_USER }}
-      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-      snowflake-role: ${{ vars.SNOWFLAKE_ROLE }}
+    secrets: inherit
+      
 
   # ============================================================================
   # Phase 2: Cloud Storage Resources (Parallel with Phase 1)
@@ -65,9 +61,7 @@ jobs:
       backend-type: remote
       terraform-dir: snowflake/tf
       tf-vars-file: terraform.tfvars
-    secrets:
-      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      aws-role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+    secrets: inherit
 
   gcp-storage:
     name: Phase 2 - GCP Storage
@@ -80,10 +74,7 @@ jobs:
       backend-type: remote
       terraform-dir: snowflake/tf
       tf-vars-file: terraform.tfvars
-    secrets:
-      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      # gcp-wif-provider: ${{ secrets.GCP_WIF_PROVIDER }}
-      # gcp-service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+    secrets: inherit
 
   azure-storage:
     name: Phase 2 - Azure Storage
@@ -96,11 +87,7 @@ jobs:
       backend-type: remote
       terraform-dir: snowflake/tf
       tf-vars-file: terraform.tfvars
-    secrets:
-      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      # azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      # azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      # azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    secrets: inherit
 
   # ============================================================================
   # Phase 3: Snowflake Integrations (After Phase 1 & 2)
