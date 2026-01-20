@@ -1,0 +1,56 @@
+{
+  "warehouses": {
+    "load_wh": {
+      "name": "LOAD_WH",
+      "comment": "This warehouse will be used for loading all the JSON files.",
+      "warehouse_size": "X-SMALL",
+      "auto_resume": true,
+      "auto_suspend": 60,
+      "enable_query_acceleration": false,
+      "warehouse_type": "STANDARD",
+      "min_cluster_count": 1,
+      "max_cluster_count": 1,
+      "scaling_policy": "STANDARD",
+      "initially_suspended": true
+    },
+    "transform_wh": {
+      "name": "TRANSFORM_WH",
+      "comment": "This warehouse will be used for transform activities.",
+      "warehouse_size": "X-SMALL",
+      "auto_resume": true,
+      "auto_suspend": 60,
+      "enable_query_acceleration": false,
+      "warehouse_type": "STANDARD",
+      "min_cluster_count": 1,
+      "max_cluster_count": 1,
+      "scaling_policy": "STANDARD",
+      "initially_suspended": true
+    },
+    "streamlit_wh": {
+      "name": "STREAMLIT_WH",
+      "comment": "This warehouse will be used for running Streamlit queries.",
+      "warehouse_size": "X-SMALL",
+      "auto_resume": true,
+      "auto_suspend": 60,
+      "enable_query_acceleration": false,
+      "warehouse_type": "STANDARD",
+      "min_cluster_count": 1,
+      "max_cluster_count": 1,
+      "scaling_policy": "STANDARD",
+      "initially_suspended": true
+    },
+    "adhoc_wh": {
+      "name": "ADHOC_WH",
+      "comment": "This warehouse will be used any adhoc purpose.",
+      "warehouse_size": "X-SMALL",
+      "auto_resume": true,
+      "auto_suspend": 60,
+      "enable_query_acceleration": false,
+      "warehouse_type": "STANDARD",
+      "min_cluster_count": 1,
+      "max_cluster_count": 1,
+      "scaling_policy": "STANDARD",
+      "initially_suspended": true
+    }
+  }
+}

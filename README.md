@@ -230,6 +230,77 @@ S3_BUCKET_NAME: my-lakehouse-bucket
 
 **Note:** The workflow automatically injects AWS variables into storage integration scripts and displays masked values in the deployment summary for verification.
 
+### 2a. Configure Codespaces Secrets (For Terraform Development)
+
+If you're running Terraform from GitHub Codespaces, you need to configure Codespaces secrets for authentication.
+
+> **💡 Quick Start:** If you already have GitHub Actions configured, see [infra/aws/tf/CODESPACES_QUICK_START.md](infra/aws/tf/CODESPACES_QUICK_START.md) to reuse your existing credentials!
+
+**Navigate to:** Settings → Secrets and variables → Codespaces
+
+#### Required Codespaces Secrets (Key-Pair Authentication):
+
+| Secret Name | Description | Copy From Actions |
+|-------------|-------------|-------------------|
+| `TF_VAR_snowflake_account` | Snowflake account identifier | `SNOWFLAKE_ACCOUNT` variable |
+| `TF_VAR_snowflake_user` | Snowflake service account username | `SNOWFLAKE_USER` variable |
+| `TF_VAR_snowflake_private_key` | Private key content (PEM format) | `SNOWFLAKE_PRIVATE_KEY` secret |
+| `TF_VAR_snowflake_role` | Snowflake role for Terraform operations | Set to `SYSADMIN` |
+| `AWS_ACCESS_KEY_ID` | AWS access key for S3/IAM operations | (from AWS IAM) |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret access key | (from AWS IAM) |
+| `AWS_DEFAULT_REGION` | AWS region for resources | `us-east-1` |
+
+**Note:** GitHub Actions secrets and Codespaces secrets are stored separately. You need to configure both, but you can use the same values.
+
+#### Optional Codespaces Variables:
+
+| Variable Name | Description | Default |
+|---------------|-------------|---------|
+| `TF_VAR_environment` | Environment name | `devl` |
+| `TF_VAR_project_name` | Project name prefix | `snw-lkh` |
+| `TF_VAR_aws_region` | AWS region | `us-east-1` |
+
+#### Setting Codespaces Secrets:
+
+1. Go to your repository on GitHub
+2. Click **Settings** → **Secrets and variables** → **Codespaces**
+3. Click **New repository secret**
+4. Add each secret with the name and value from the table above
+5. Secrets are automatically injected as environment variables in your Codespace
+
+#### Using Terraform in Codespaces:
+
+Once secrets are configured, you can run Terraform commands directly in your Codespace:
+
+```bash
+# Navigate to Terraform directory
+cd infra/aws/tf
+
+# Initialize Terraform
+terraform init
+
+# Validate configuration
+terraform validate
+
+# Plan changes (preview what will be created)
+terraform plan
+
+# Apply changes (create resources)
+terraform apply
+
+# View outputs
+terraform output
+```
+
+**Note:** Codespaces secrets are automatically available as environment variables with the `TF_VAR_` prefix, which Terraform automatically recognizes and uses for variable values.
+
+**Security Best Practices:**
+- ✅ Use repository secrets (not user secrets) for team collaboration
+- ✅ Rotate credentials regularly
+- ✅ Use least privilege IAM policies
+- ✅ Never commit credentials to the repository
+- ✅ Consider using AWS OIDC instead of access keys (see section 3 below)
+
 ### 3. AWS OIDC Setup (Optional but Recommended)
 
 For secure GitHub Actions authentication with AWS without long-lived credentials, set up OIDC (OpenID Connect). This eliminates the need to store AWS access keys in GitHub Secrets.

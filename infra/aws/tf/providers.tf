@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 1.12.0"
     }
+    snowflake = {
+      source  = "Snowflake-Labs/snowflake"
+      version = "~> 0.94"
+    }
   }
 }
 
@@ -17,4 +21,13 @@ provider "aws" {
   default_tags {
     tags = var.tags
   }
+}
+
+# Configure the Snowflake Provider
+provider "snowflake" {
+  account     = var.snowflake_account
+  user        = var.snowflake_user
+  password    = var.snowflake_password != "" ? var.snowflake_password : null
+  private_key = var.snowflake_private_key != "" ? var.snowflake_private_key : null
+  role        = var.snowflake_role
 }

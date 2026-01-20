@@ -31,4 +31,10 @@ output "s3_bucket_policy" {
   description = "S3 bucket policy"
   value       = local.s3_bucket.bucket_policy
   sensitive   = false
-} 
+}
+
+############ Snowflake Warehouse Outputs ############################
+output "snowflake_warehouses" {
+  description = "Snowflake warehouses created"
+  value       = module.snowflake.warehouses
+}

@@ -50,3 +50,39 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# ============================================================================
+# Snowflake Variables
+# ============================================================================
+
+variable "snowflake_account" {
+  description = "Snowflake account identifier"
+  type        = string
+  default     = ""
+}
+
+variable "snowflake_user" {
+  description = "Snowflake user for Terraform operations"
+  type        = string
+  default     = ""
+}
+
+variable "snowflake_password" {
+  description = "Snowflake password for Terraform operations (use either password or private_key)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "snowflake_private_key" {
+  description = "Snowflake private key for key-pair authentication (use either password or private_key)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "snowflake_role" {
+  description = "Snowflake role for Terraform operations"
+  type        = string
+  default     = "SYSADMIN"
+}
