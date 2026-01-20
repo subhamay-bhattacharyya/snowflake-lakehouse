@@ -40,7 +40,7 @@ jobs:
       cloud-provider: snowflake
       tflint-ver: ${{ vars.TF_LINT_VER }}
       backend-type: remote
-      terraform-dir: infra/snowflake/tf
+      terraform-dir: tf
       tf-vars-file: terraform.tfvars
     secrets: inherit
       
@@ -59,7 +59,7 @@ jobs:
       aws-region: ${{ vars.AWS_REGION }}
       tflint-ver: ${{ vars.TF_LINT_VER }}
       backend-type: remote
-      terraform-dir: infra/aws/tf
+      terraform-dir: tf
       tf-vars-file: terraform.tfvars
     secrets: inherit
 
@@ -72,7 +72,7 @@ jobs:
       cloud-provider: gcp
       tflint-ver: ${{ vars.TF_LINT_VER }}
       backend-type: remote
-      terraform-dir: infra/snowflake/tf
+      terraform-dir: tf
       tf-vars-file: terraform.tfvars
     secrets: inherit
 
@@ -85,7 +85,7 @@ jobs:
       cloud-provider: azure
       tflint-ver: ${{ vars.TF_LINT_VER }}
       backend-type: remote
-      terraform-dir: infra/snowflake/tf
+      terraform-dir: tf
       tf-vars-file: terraform.tfvars
     secrets: inherit
 
