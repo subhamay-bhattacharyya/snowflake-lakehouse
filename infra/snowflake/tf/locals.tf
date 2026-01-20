@@ -15,11 +15,9 @@ locals {
   # Snowflake Core Resources (from JSON files)
   # -------------------------------------------------------------------------
   
-  warehouses_config = jsondecode(file("${path.module}/input-jsons/warehouses.json"))
-  warehouses        = local.warehouses_config["warehouses"]
-
-  databases_config = jsondecode(file("${path.module}/input-jsons/databases.json"))
-  databases        = local.databases_config["databases"]
+  snowflake_core_config = jsondecode(file("${path.module}/input-jsons/snowflake-core-objects.json"))
+  warehouses            = local.snowflake_core_config["warehouses"]
+  databases             = local.snowflake_core_config["databases"]
 
   # -------------------------------------------------------------------------
   # AWS Configuration
