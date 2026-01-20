@@ -55,8 +55,14 @@ variable "tags" {
 # Snowflake Variables
 # ============================================================================
 
-variable "snowflake_account" {
-  description = "Snowflake account identifier"
+variable "snowflake_organization_name" {
+  description = "Snowflake organization name"
+  type        = string
+  default     = ""
+}
+
+variable "snowflake_account_name" {
+  description = "Snowflake account name (not the full account identifier)"
   type        = string
   default     = ""
 }
@@ -85,4 +91,55 @@ variable "snowflake_role" {
   description = "Snowflake role for Terraform operations"
   type        = string
   default     = "SYSADMIN"
+}
+
+variable "snowflake_private_key_passphrase" {
+  description = "Snowflake private key passphrase for encrypted keys"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# ============================================================================
+# Uppercase variants for GitHub Secrets/Codespaces compatibility
+# These map to lowercase variables used by the provider
+# ============================================================================
+
+variable "SNOWFLAKE_ACCOUNT" {
+  description = "Snowflake account identifier (from GitHub secrets) - will be split into org and account name"
+  type        = string
+  default     = ""
+}
+
+variable "SNOWFLAKE_USER" {
+  description = "Snowflake user (from GitHub secrets)"
+  type        = string
+  default     = ""
+}
+
+variable "SNOWFLAKE_PASSWORD" {
+  description = "Snowflake password (from GitHub secrets)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "SNOWFLAKE_PRIVATE_KEY" {
+  description = "Snowflake private key (from GitHub secrets)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "SNOWFLAKE_ROLE" {
+  description = "Snowflake role (from GitHub secrets)"
+  type        = string
+  default     = ""
+}
+
+variable "SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" {
+  description = "Snowflake private key passphrase (from GitHub secrets)"
+  type        = string
+  sensitive   = true
+  default     = ""
 }

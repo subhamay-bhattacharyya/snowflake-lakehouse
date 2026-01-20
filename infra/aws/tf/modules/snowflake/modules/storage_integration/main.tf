@@ -10,7 +10,7 @@ resource "snowflake_storage_integration" "this" {
   storage_allowed_locations = var.storage_allowed_locations
   storage_blocked_locations = var.storage_blocked_locations
 
-  storage_provider         = var.storage_provider
-  storage_aws_role_arn     = var.storage_provider == "S3" ? var.storage_aws_role_arn : null
-  storage_aws_object_acl   = var.storage_provider == "S3" ? var.storage_aws_object_acl : null
+  storage_provider       = var.storage_provider
+  storage_aws_role_arn   = var.storage_provider == "S3" ? var.storage_aws_role_arn : null
+  storage_aws_object_acl = var.storage_provider == "S3" ? var.storage_aws_object_acl : null
 }

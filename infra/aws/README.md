@@ -376,6 +376,132 @@ environment  = "dev"
 aws_region   = "us-east-1"
 ```
 
+## Snowflake Authentication Setup
+
+### Generate Unencrypted Private Key for Terraform
+
+For Terraform to authenticate with Snowflake, you need to set up key-pair authentication. Follow these steps to generate and configure an unencrypted private key.
+
+#### Step 1: Generate New Key Pair
+
+```bash
+# Create a directory for the keys
+mkdir -p ~/snowflake-keys && cd ~/snowflake-keys
+
+# Update .gitignore to prevent committing keys to GitHub
+echo "snowflake-keys/" >> ~/.gitignore
+echo "*.p8" >> ~/.gitignore
+echo "snowflake_key.*" >> ~/.gitignore
+
+# Generate unencrypted private key (2048-bit RSA)
+openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out snowflake_key.p8 -nocrypt
+
+# Generate public key from private key
+openssl rsa -in snowflake_key.p8 -pubout -out snowflake_key.pub
+
+echo "✅ Keys generated successfully!"
+```
+
+#### Step 2: Extract Public Key for Snowflake
+
+```bash
+# Extract public key content without BEGIN/END headers
+grep -v "BEGIN PUBLIC KEY" snowflake_key.pub | grep -v "END PUBLIC KEY" | tr -d '\n'
+
+# This will output something like:
+# MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+```
+
+**Copy this output** - you'll need it for Step 3.
+
+#### Step 3: Update Snowflake User with New Public Key
+
+Connect to Snowflake and run:
+
+```sql
+-- Switch to account admin role
+USE ROLE ACCOUNTADMIN;
+
+-- Update the user with new public key (paste the key from Step 2)
+ALTER USER GH_ACTIONS_USER SET RSA_PUBLIC_KEY='MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...';
+
+-- Verify the key was set
+DESC USER GH_ACTIONS_USER;
+```
+
+#### Step 4: Get Private Key Content for GitHub Secret
+
+```bash
+# Display the full private key (including headers)
+cat snowflake_key.p8
+```
+
+**Copy the entire output** including:
+- `-----BEGIN PRIVATE KEY-----`
+- All the content
+- `-----END PRIVATE KEY-----`
+
+#### Step 5: Update GitHub Codespaces Secrets
+
+1. Go to: **GitHub → Repository Settings → Secrets and variables → Codespaces**
+2. Add/Update these secrets:
+   - **Name:** `TF_VAR_SNOWFLAKE_ACCOUNT`  
+     **Value:** Your account identifier (format: `ORGNAME-ACCOUNTNAME`, e.g., `AGXUOKJ-JKC15404`)
+   
+   - **Name:** `TF_VAR_SNOWFLAKE_USER`  
+     **Value:** Your Snowflake username (e.g., `GH_ACTIONS_USER`)
+   
+   - **Name:** `TF_VAR_SNOWFLAKE_PRIVATE_KEY`  
+     **Value:** Paste the entire private key from Step 4 (with headers)
+   
+   - **Name:** `TF_VAR_SNOWFLAKE_ROLE`  
+     **Value:** `SYSADMIN` (or your preferred role)
+
+3. **Important:** If you previously had `TF_VAR_SNOWFLAKE_PRIVATE_KEY_PASSPHRASE`, delete it (unencrypted keys don't need passphrases)
+
+#### Step 6: Clean Up Local Keys
+
+**Security:** Delete the local key files after updating GitHub:
+
+```bash
+rm -rf ~/snowflake-keys
+```
+
+The keys should only exist in:
+- ✅ Snowflake (public key)
+- ✅ GitHub Secrets (private key)
+- ❌ NOT in your local filesystem or repository
+
+#### Step 7: Restart Codespace and Test
+
+```bash
+# Restart the codespace from GitHub UI or close/reopen
+
+# After restart, verify the new key is loaded:
+echo "$TF_VAR_SNOWFLAKE_PRIVATE_KEY" | head -1
+# Should output: -----BEGIN PRIVATE KEY----- (not ENCRYPTED)
+
+# Test Terraform
+cd /workspaces/snowflake-lakehouse/infra/aws/tf
+terraform plan
+```
+
+### Environment Variables Mapping
+
+Your GitHub Codespaces secrets automatically map to Terraform variables:
+
+| GitHub Secret | Terraform Variable | Description |
+|--------------|-------------------|-------------|
+| `TF_VAR_SNOWFLAKE_ACCOUNT` | Split into `organization_name` + `account_name` | Account identifier (ORGNAME-ACCOUNTNAME) |
+| `TF_VAR_SNOWFLAKE_USER` | `snowflake_user` | Snowflake username |
+| `TF_VAR_SNOWFLAKE_PRIVATE_KEY` | `snowflake_private_key` | Private key for authentication |
+| `TF_VAR_SNOWFLAKE_ROLE` | `snowflake_role` | Snowflake role (e.g., SYSADMIN) |
+
+The Terraform configuration automatically:
+1. Reads uppercase environment variables (`TF_VAR_SNOWFLAKE_*`)
+2. Splits the account identifier into organization and account name
+3. Maps to the Snowflake provider's required parameters
+
 ## IAM Role for Snowflake
 
 The IAM role created for Snowflake storage integration should have:

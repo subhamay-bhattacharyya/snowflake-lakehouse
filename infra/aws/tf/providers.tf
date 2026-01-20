@@ -10,9 +10,14 @@ provider "aws" {
 
 # Configure the Snowflake Provider
 provider "snowflake" {
-  account     = var.snowflake_account
-  user        = var.snowflake_user
-  password    = var.snowflake_password != "" ? var.snowflake_password : null
-  private_key = var.snowflake_private_key != "" ? var.snowflake_private_key : null
-  role        = var.snowflake_role
+  organization_name = local.snowflake_org_name
+  account_name      = local.snowflake_account_name
+  user              = local.snowflake_user
+  role              = local.snowflake_role
+
+  # Use private key authentication when available, otherwise use password
+  authenticator          = local.snowflake_private_key != "" ? "JWT" : "SNOWFLAKE"
+  private_key            = local.snowflake_private_key != "" ? local.snowflake_private_key : null
+  private_key_passphrase = local.snowflake_private_key_passphrase != "" ? local.snowflake_private_key_passphrase : null
+  password               = local.snowflake_private_key == "" && local.snowflake_password != "" ? local.snowflake_password : null
 }
