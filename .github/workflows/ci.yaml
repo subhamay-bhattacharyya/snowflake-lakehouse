@@ -35,50 +35,19 @@ jobs:
   snowflake-core:
     name: Phase 1 - Snowflake Core
     needs: start-job
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ vars.TERRAFORM_VERSION || '1.9.6' }}
-          cli_config_credentials_token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-
-      - name: Terraform Init
-        working-directory: infra/snowflake/tf
-        run: terraform init
-
-      - name: Terraform Validate
-        working-directory: infra/snowflake/tf
-        run: terraform validate
-
-      - name: Terraform Plan - Snowflake Core Only
-        working-directory: infra/snowflake/tf
-        env:
-          TF_VAR_snowflake_account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-          TF_VAR_snowflake_user: ${{ vars.SNOWFLAKE_USER }}
-          TF_VAR_snowflake_private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          TF_VAR_snowflake_role: ${{ vars.SNOWFLAKE_ROLE || 'SYSADMIN' }}
-          TF_VAR_enable_aws: false
-          TF_VAR_enable_gcp: false
-          TF_VAR_enable_azure: false
-        run: |
-          terraform plan \
-            -target=module.snowflake_core \
-            -out=snowflake-core.tfplan
-
-      - name: Terraform Apply - Snowflake Core
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        working-directory: infra/snowflake/tf
-        env:
-          TF_VAR_snowflake_account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-          TF_VAR_snowflake_user: ${{ vars.SNOWFLAKE_USER }}
-          TF_VAR_snowflake_private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          TF_VAR_snowflake_role: ${{ vars.SNOWFLAKE_ROLE || 'SYSADMIN' }}
-        run: terraform apply -auto-approve snowflake-core.tfplan
+    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@feature/GHA-0033-enhancement-add-snowflake
+    with:
+      cloud-provider: snowflake
+      tflint-ver: ${{ vars.TF_LINT_VER }}
+      backend-type: remote
+      terraform-dir: snowflake/tf
+      tf-vars-file: terraform.tfvars
+    secrets:
+      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      snowflake-account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+      snowflake-user: ${{ vars.SNOWFLAKE_USER }}
+      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      snowflake-role: ${{ vars.SNOWFLAKE_ROLE }}
 
   # ============================================================================
   # Phase 2: Cloud Storage Resources (Parallel with Phase 1)
