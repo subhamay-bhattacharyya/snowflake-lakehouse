@@ -59,7 +59,7 @@ jobs:
       aws-region: ${{ vars.AWS_REGION }}
       tflint-ver: ${{ vars.TF_LINT_VER }}
       backend-type: remote
-      terraform-dir: infra/snowflake/tf
+      terraform-dir: infra/aws/tf
       tf-vars-file: terraform.tfvars
     secrets: inherit
 
