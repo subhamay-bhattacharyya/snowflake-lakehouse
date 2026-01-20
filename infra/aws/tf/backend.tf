@@ -9,7 +9,7 @@ terraform {
       version = ">= 1.12.0"
     }
     snowflake = {
-      source  = "Snowflake-Labs/snowflake"
+      source  = "snowflakedb/snowflake"
       version = "~> 0.94"
     }
   }
