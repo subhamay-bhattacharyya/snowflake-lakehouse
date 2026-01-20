@@ -18,7 +18,8 @@ This repository provides a complete solution for deploying and managing a Snowfl
 ```
 .
 ├── infra/                     # Infrastructure as Code
-│   ├── aws/tf/                # AWS resources (S3, IAM)
+│   ├── snowflake/tf/          # Multi-cloud Snowflake Terraform (NEW)
+│   ├── aws/tf/                # Legacy AWS-only Terraform
 │   ├── azure/tf/              # Azure resources (Storage, Managed Identity)
 │   └── gcp/tf/                # GCP resources (GCS, Service Accounts)
 ├── snowflake/                 # Snowflake DDL Scripts
@@ -37,6 +38,21 @@ This repository provides a complete solution for deploying and managing a Snowfl
 └── .github/
     └── workflows/             # GitHub Actions workflows
 ```
+
+## Architecture
+
+This project uses a **3-phase multi-cloud architecture**:
+
+### Phase 1 & 2: Snowflake Core + Cloud Storage (Parallel)
+- **Snowflake Core** (cloud-agnostic): Warehouses, Databases, Schemas
+- **Cloud Storage** (parallel): AWS S3, GCP GCS, Azure Blob
+
+### Phase 3: Integrations (After Phase 1 & 2)
+- Storage Integrations
+- External Stages
+- Snowpipes
+
+**See detailed architecture:** [infra/snowflake/tf/ARCHITECTURE.md](infra/snowflake/tf/ARCHITECTURE.md)
 
 ## Getting Started
 
@@ -210,96 +226,126 @@ SHOW GRANTS TO ROLE SYSADMIN;
 
 Set up GitHub Actions authentication. See [.github/SETUP.md](.github/SETUP.md) for detailed instructions.
 
-**Variables** (Settings → Secrets and variables → Actions → Variables):
+#### Required Variables (Settings → Secrets and variables → Actions → Variables):
+
+**Snowflake Configuration:**
 - `SNOWFLAKE_ACCOUNT` - Your account identifier (e.g., `AGXUOKJ-JKC15404`)
 - `SNOWFLAKE_USER` - Service account username (e.g., `GH_ACTIONS_USER`)
+- `SNOWFLAKE_ROLE` - Snowflake role (e.g., `SYSADMIN`)
+
+**Cloud Provider Enablement (Control which clouds to use):**
+- `ENABLE_AWS` - Set to `true` to enable AWS S3 + IAM (default: `true`)
+- `ENABLE_GCP` - Set to `true` to enable GCP GCS + Service Account (default: `false`)
+- `ENABLE_AZURE` - Set to `true` to enable Azure Blob + Managed Identity (default: `false`)
+
+**AWS Configuration (if ENABLE_AWS = true):**
+- `AWS_REGION` - AWS region (e.g., `us-east-1`)
 - `AWS_ROLE_ARN` - AWS IAM role ARN for S3 access (e.g., `arn:aws:iam::123456789012:role/snowflake-s3-role`)
 - `S3_BUCKET_NAME` - S3 bucket name for lakehouse data (e.g., `my-lakehouse-bucket`)
 
-**Secrets** (Settings → Secrets and variables → Actions → Secrets):
+**GCP Configuration (if ENABLE_GCP = true):**
+- `GCP_PROJECT` - GCP project ID
+- `GCP_REGION` - GCP region (e.g., `us-central1`)
+
+**Azure Configuration (if ENABLE_AZURE = true):**
+- `AZURE_SUBSCRIPTION_ID` - Azure subscription ID
+- `AZURE_LOCATION` - Azure location (e.g., `eastus`)
+
+#### Required Secrets (Settings → Secrets and variables → Actions → Secrets):
+
+**Snowflake Authentication:**
 - `SNOWFLAKE_PRIVATE_KEY` - Content of `snowflake_key.p8` file (including header/footer)
-- `SNOWFLAKE_PASSPHRASE` - Passphrase you used when generating the key
+- `TF_TOKEN_APP_TERRAFORM_IO` - Terraform Cloud token
 
-**Example Values:**
-```
-SNOWFLAKE_ACCOUNT: AGXUOKJ-JKC15404
-SNOWFLAKE_USER: GH_ACTIONS_USER
-AWS_ROLE_ARN: arn:aws:iam::123456789012:role/snowflake-s3-access-role
-S3_BUCKET_NAME: my-lakehouse-bucket
-```
+**AWS Authentication (if ENABLE_AWS = true):**
+- `AWS_OIDC_ROLE_ARN` - AWS IAM role ARN for OIDC authentication
 
-**Note:** The workflow automatically injects AWS variables into storage integration scripts and displays masked values in the deployment summary for verification.
+**GCP Authentication (if ENABLE_GCP = true):**
+- `GCP_WIF_PROVIDER` - GCP Workload Identity Federation provider
+- `GCP_SERVICE_ACCOUNT` - GCP service account email
+
+**Azure Authentication (if ENABLE_AZURE = true):**
+- `AZURE_CLIENT_ID` - Azure client ID
+- `AZURE_TENANT_ID` - Azure tenant ID
+- `AZURE_SUBSCRIPTION_ID` - Azure subscription ID
+
+#### Multi-Cloud Configuration Examples
+
+**Example 1: AWS Only (Most Common)**
+```
+ENABLE_AWS = true
+ENABLE_GCP = false
+ENABLE_AZURE = false
+```
+**Result:** Creates Snowflake + AWS S3 + Storage Integration
+
+**Example 2: AWS + GCP**
+```
+ENABLE_AWS = true
+ENABLE_GCP = true
+ENABLE_AZURE = false
+```
+**Result:** Creates Snowflake + AWS + GCP + Integrations for both
+
+**Example 3: All Three Clouds**
+```
+ENABLE_AWS = true
+ENABLE_GCP = true
+ENABLE_AZURE = true
+```
+**Result:** Creates Snowflake + AWS + GCP + Azure + Integrations for all
+
+**Note:** The workflow automatically injects variables into Terraform and creates only the enabled cloud resources.
 
 ### 2a. Configure Codespaces Secrets (For Terraform Development)
 
 If you're running Terraform from GitHub Codespaces, you need to configure Codespaces secrets for authentication.
 
-> **💡 Quick Start:** If you already have GitHub Actions configured, see [infra/aws/tf/CODESPACES_QUICK_START.md](infra/aws/tf/CODESPACES_QUICK_START.md) to reuse your existing credentials!
+**See detailed setup guide:** [infra/aws/tf/README.md](infra/aws/tf/README.md) or [infra/snowflake/tf/README.md](infra/snowflake/tf/README.md)
 
-**Navigate to:** Settings → Secrets and variables → Codespaces
+**Quick setup:**
 
-#### Required Codespaces Secrets (Key-Pair Authentication):
+Navigate to: **Settings → Secrets and variables → Codespaces**
 
-| Secret Name | Description | Copy From Actions |
-|-------------|-------------|-------------------|
-| `TF_VAR_snowflake_account` | Snowflake account identifier | `SNOWFLAKE_ACCOUNT` variable |
-| `TF_VAR_snowflake_user` | Snowflake service account username | `SNOWFLAKE_USER` variable |
-| `TF_VAR_snowflake_private_key` | Private key content (PEM format) | `SNOWFLAKE_PRIVATE_KEY` secret |
-| `TF_VAR_snowflake_role` | Snowflake role for Terraform operations | Set to `SYSADMIN` |
-| `AWS_ACCESS_KEY_ID` | AWS access key for S3/IAM operations | (from AWS IAM) |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret access key | (from AWS IAM) |
-| `AWS_DEFAULT_REGION` | AWS region for resources | `us-east-1` |
+Add these secrets (copy from your GitHub Actions):
+
+**Snowflake Authentication:**
+| Secret Name | Copy From Actions |
+|-------------|-------------------|
+| `TF_VAR_snowflake_account` | `SNOWFLAKE_ACCOUNT` variable |
+| `TF_VAR_snowflake_user` | `SNOWFLAKE_USER` variable |
+| `TF_VAR_snowflake_private_key` | `SNOWFLAKE_PRIVATE_KEY` secret |
+| `TF_VAR_snowflake_role` | Set to `SYSADMIN` |
+
+**Cloud Provider Enablement:**
+| Secret Name | Value | Description |
+|-------------|-------|-------------|
+| `TF_VAR_enable_aws` | `true` or `false` | Enable AWS resources |
+| `TF_VAR_enable_gcp` | `true` or `false` | Enable GCP resources |
+| `TF_VAR_enable_azure` | `true` or `false` | Enable Azure resources |
+
+**AWS Authentication (if enable_aws = true):**
+| Secret Name | Description |
+|-------------|-------------|
+| `AWS_ACCESS_KEY_ID` | From AWS IAM |
+| `AWS_SECRET_ACCESS_KEY` | From AWS IAM |
+| `AWS_DEFAULT_REGION` | e.g., `us-east-1` |
+
+**GCP Authentication (if enable_gcp = true):**
+| Secret Name | Description |
+|-------------|-------------|
+| `TF_VAR_gcp_project` | GCP project ID |
+| `GOOGLE_CREDENTIALS` | Service account JSON key |
+
+**Azure Authentication (if enable_azure = true):**
+| Secret Name | Description |
+|-------------|-------------|
+| `TF_VAR_azure_subscription_id` | Azure subscription ID |
+| `ARM_CLIENT_ID` | Azure client ID |
+| `ARM_CLIENT_SECRET` | Azure client secret |
+| `ARM_TENANT_ID` | Azure tenant ID |
 
 **Note:** GitHub Actions secrets and Codespaces secrets are stored separately. You need to configure both, but you can use the same values.
-
-#### Optional Codespaces Variables:
-
-| Variable Name | Description | Default |
-|---------------|-------------|---------|
-| `TF_VAR_environment` | Environment name | `devl` |
-| `TF_VAR_project_name` | Project name prefix | `snw-lkh` |
-| `TF_VAR_aws_region` | AWS region | `us-east-1` |
-
-#### Setting Codespaces Secrets:
-
-1. Go to your repository on GitHub
-2. Click **Settings** → **Secrets and variables** → **Codespaces**
-3. Click **New repository secret**
-4. Add each secret with the name and value from the table above
-5. Secrets are automatically injected as environment variables in your Codespace
-
-#### Using Terraform in Codespaces:
-
-Once secrets are configured, you can run Terraform commands directly in your Codespace:
-
-```bash
-# Navigate to Terraform directory
-cd infra/aws/tf
-
-# Initialize Terraform
-terraform init
-
-# Validate configuration
-terraform validate
-
-# Plan changes (preview what will be created)
-terraform plan
-
-# Apply changes (create resources)
-terraform apply
-
-# View outputs
-terraform output
-```
-
-**Note:** Codespaces secrets are automatically available as environment variables with the `TF_VAR_` prefix, which Terraform automatically recognizes and uses for variable values.
-
-**Security Best Practices:**
-- ✅ Use repository secrets (not user secrets) for team collaboration
-- ✅ Rotate credentials regularly
-- ✅ Use least privilege IAM policies
-- ✅ Never commit credentials to the repository
-- ✅ Consider using AWS OIDC instead of access keys (see section 3 below)
 
 ### 3. AWS OIDC Setup (Optional but Recommended)
 
@@ -344,14 +390,71 @@ The repository includes sample implementations:
 ### Current Status
 
 - ✅ **AWS**: Fully implemented (S3, IAM, storage integrations)
-- 🚧 **Azure**: Infrastructure ready, DDL scripts pending
-- 🚧 **GCP**: Infrastructure ready, DDL scripts pending
+- 🚧 **GCP**: Infrastructure ready, enable with `ENABLE_GCP=true`
+- 🚧 **Azure**: Infrastructure ready, enable with `ENABLE_AZURE=true`
+
+### Enabling Cloud Providers
+
+#### For GitHub Actions (CI/CD)
+
+Set these variables in **Settings → Secrets and variables → Actions → Variables**:
+
+```
+ENABLE_AWS = true    # Enable AWS S3 + IAM
+ENABLE_GCP = false   # Enable GCP GCS + Service Account
+ENABLE_AZURE = false # Enable Azure Blob + Managed Identity
+```
+
+#### For Terraform (Local/Codespaces)
+
+Edit `infra/snowflake/tf/terraform.tfvars`:
+
+```hcl
+# Enable/disable cloud providers
+enable_aws   = true   # AWS S3
+enable_gcp   = false  # GCP GCS
+enable_azure = false  # Azure Blob
+```
+
+Or set environment variables:
+
+```bash
+export TF_VAR_enable_aws=true
+export TF_VAR_enable_gcp=false
+export TF_VAR_enable_azure=false
+```
+
+### What Gets Created Per Cloud
+
+#### AWS (when ENABLE_AWS = true)
+- ✅ S3 Bucket for data storage
+- ✅ IAM Role for Snowflake access
+- ✅ Bucket policy and encryption
+- ✅ Snowflake storage integration
+- ✅ External stage
+
+#### GCP (when ENABLE_GCP = true)
+- ✅ GCS Bucket for data storage
+- ✅ Service Account for Snowflake access
+- ✅ IAM bindings
+- ✅ Snowflake storage integration
+- ✅ External stage
+
+#### Azure (when ENABLE_AZURE = true)
+- ✅ Blob Storage for data storage
+- ✅ Managed Identity for Snowflake access
+- ✅ Storage account and container
+- ✅ Snowflake storage integration
+- ✅ External stage
 
 ### Adding New Cloud Providers
 
-1. Add Terraform configuration in `infra/<provider>/tf/`
-2. Create storage integration scripts in `snowflake/04_storage/<provider>/`
-3. Add Snowpipe definitions in `snowflake/06_pipes/<provider>/`
+1. Set `ENABLE_<CLOUD>=true` in GitHub variables
+2. Add cloud-specific secrets (credentials)
+3. Configure JSON input files in `infra/snowflake/tf/input-jsons/`
+4. Run workflow or `terraform apply`
+
+**See detailed guide:** [infra/snowflake/tf/README.md](infra/snowflake/tf/README.md)
 
 ## GitHub Actions Workflow
 
