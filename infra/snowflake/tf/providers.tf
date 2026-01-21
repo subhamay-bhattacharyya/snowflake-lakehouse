@@ -7,8 +7,14 @@ terraform {
 
   required_providers {
     snowflake = {
-      source  = "Snowflake-Labs/snowflake"
-      version = "~> 0.94"
+      source  = "snowflakedb/snowflake"
+      version = "~> 0.98"
     }
   }
 }
+
+# ============================================================================
+# Snowflake Provider Configuration
+# ============================================================================
+# Authentication: Uses private key authentication (passkey)
+# The private key should be in PEM format without encryption

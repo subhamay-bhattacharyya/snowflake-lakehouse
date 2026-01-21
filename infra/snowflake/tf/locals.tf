@@ -22,4 +22,41 @@ locals {
       name = var.object_prefix != "" ? "${var.object_prefix}_${db.name}" : db.name
     })
   }
+
+  # Extract and flatten file formats from all databases
+  file_formats = flatten([
+    for db_key, db in local.snowflake_core_config["databases"] : [
+      for ff_key, ff in lookup(db, "file_formats", {}) : merge(ff, {
+        database = var.object_prefix != "" ? "${var.object_prefix}_${db.name}" : db.name
+        schema   = "UTIL" # File formats are created in UTIL schema
+      })
+    ]
+  ])
+
+  # Extract and flatten storage integrations from all databases
+  storage_integrations = flatten([
+    for db_key, db in local.snowflake_core_config["databases"] : [
+      for si_key, si in lookup(db, "storage_integrations", {}) : merge(si, {
+        database = var.object_prefix != "" ? "${var.object_prefix}_${db.name}" : db.name
+      })
+    ]
+  ])
+
+  # Extract and flatten stages from all databases
+  stages = flatten([
+    for db_key, db in local.snowflake_core_config["databases"] : [
+      for stage_key, stage in lookup(db, "stages", {}) : merge(stage, {
+        database = var.object_prefix != "" ? "${var.object_prefix}_${db.name}" : db.name
+      })
+    ]
+  ])
+
+  # Extract and flatten snowpipes from all databases
+  snowpipes = flatten([
+    for db_key, db in local.snowflake_core_config["databases"] : [
+      for pipe_key, pipe in lookup(db, "snowpipes", {}) : merge(pipe, {
+        database = var.object_prefix != "" ? "${var.object_prefix}_${db.name}" : db.name
+      })
+    ]
+  ])
 }

@@ -2,7 +2,7 @@
   "warehouses": {
     "load_wh": {
       "name": "LOAD_WH",
-      "comment": "This warehouse will be used for loading all the JSON files.......",
+      "comment": "This warehouse will be used for loading all the JSON files",
       "warehouse_size": "X-SMALL",
       "auto_resume": true,
       "auto_suspend": 60,
@@ -15,7 +15,7 @@
     },
     "transform_wh": {
       "name": "TRANSFORM_WH",
-      "comment": "This warehouse will be used for transform activities.",
+      "comment": "This warehouse will be used for transform activities",
       "warehouse_size": "X-SMALL",
       "auto_resume": true,
       "auto_suspend": 60,
@@ -28,7 +28,7 @@
     },
     "streamlit_wh": {
       "name": "STREAMLIT_WH",
-      "comment": "This warehouse will be used for running Streamlit queries.",
+      "comment": "This warehouse will be used for running Streamlit queries",
       "warehouse_size": "X-SMALL",
       "auto_resume": true,
       "auto_suspend": 60,
@@ -41,7 +41,7 @@
     },
     "adhoc_wh": {
       "name": "ADHOC_WH",
-      "comment": "This warehouse will be used any adhoc purpose.",
+      "comment": "This warehouse will be used for any adhoc purpose",
       "warehouse_size": "X-SMALL",
       "auto_resume": true,
       "auto_suspend": 60,
@@ -54,21 +54,117 @@
     }
   },
   "databases": {
-    "lakehouse": {
-      "name": "LAKEHOUSE",
-      "comment": "Main lakehouse database for multi-cloud data storage",
+    "bronze": {
+      "name": "BRONZE",
+      "comment": "Bronze layer - Raw data ingestion from source systems",
       "schemas": [
         {
-          "name": "RAW",
-          "comment": "Raw data layer - ingested data from various sources"
+          "name": "RAW_DATA",
+          "comment": "Raw data from all source systems"
         },
         {
-          "name": "STAGING",
-          "comment": "Staging data layer - cleaned and validated data"
+          "name": "UTIL",
+          "comment": "Utility objects - file formats, stages, storage integrations"
+        }
+      ],
+      "file_formats": {
+        "csv": {
+          "name": "CSV_FILE_FORMAT",
+          "type": "CSV",
+          "compression": "AUTO",
+          "field_delimiter": ",",
+          "record_delimiter": "\\n",
+          "skip_header": 1,
+          "field_optionally_enclosed_by": "\"",
+          "trim_space": true,
+          "error_on_column_count_mismatch": false,
+          "escape": "NONE",
+          "escape_unenclosed_field": "\\",
+          "date_format": "AUTO",
+          "timestamp_format": "AUTO",
+          "null_if": ["NULL", "null", ""],
+          "comment": "Standard CSV file format with header"
         },
+        "json": {
+          "name": "JSON_FILE_FORMAT",
+          "type": "JSON",
+          "compression": "AUTO",
+          "enable_octal": false,
+          "allow_duplicate": false,
+          "strip_outer_array": false,
+          "strip_null_values": false,
+          "ignore_utf8_errors": false,
+          "comment": "Standard JSON file format"
+        }
+      },
+      "storage_integrations": {
+        "s3": {
+          "name": "S3_STORAGE_INTEGRATION",
+          "type": "EXTERNAL_STAGE",
+          "storage_provider": "S3",
+          "enabled": true,
+          "storage_allowed_locations": ["s3://my-bucket/*"],
+          "storage_blocked_locations": [],
+          "comment": "S3 storage integration - allows access to entire my-bucket"
+        }
+      },
+      "stages": {
+        "external_s3_csv": {
+          "name": "S3_EXTERNAL_STAGE_CSV",
+          "schema": "UTIL",
+          "url": "s3://my-bucket/raw-data/csv/",
+          "storage_integration": "S3_STORAGE_INTEGRATION",
+          "file_format": "CSV_FILE_FORMAT",
+          "comment": "External stage for S3 CSV data ingestion"
+        },
+        "external_s3_json": {
+          "name": "S3_EXTERNAL_STAGE_JSON",
+          "schema": "UTIL",
+          "url": "s3://my-bucket/raw-data/json/",
+          "storage_integration": "S3_STORAGE_INTEGRATION",
+          "file_format": "JSON_FILE_FORMAT",
+          "comment": "External stage for S3 JSON data ingestion"
+        },
+        "user": {
+          "name": "USER_STAGE",
+          "schema": "UTIL",
+          "comment": "User stage for temporary file uploads"
+        }
+      },
+      "snowpipes": {
+        "csv_pipe": {
+          "name": "CSV_SNOWPIPE",
+          "schema": "RAW_DATA",
+          "copy_statement": "COPY INTO BRONZE.RAW_DATA.SALES_DATA FROM @BRONZE.UTIL.S3_EXTERNAL_STAGE_CSV FILE_FORMAT = (FORMAT_NAME = 'BRONZE.UTIL.CSV_FILE_FORMAT')",
+          "auto_ingest": true,
+          "comment": "Snowpipe for automatic CSV data ingestion from S3"
+        },
+        "json_pipe": {
+          "name": "JSON_SNOWPIPE",
+          "schema": "RAW_DATA",
+          "copy_statement": "COPY INTO BRONZE.RAW_DATA.EVENT_DATA FROM @BRONZE.UTIL.S3_EXTERNAL_STAGE_JSON FILE_FORMAT = (FORMAT_NAME = 'BRONZE.UTIL.JSON_FILE_FORMAT')",
+          "auto_ingest": true,
+          "comment": "Snowpipe for automatic JSON data ingestion from S3"
+        }
+      }
+    },
+    "silver": {
+      "name": "SILVER",
+      "comment": "Silver layer - Cleaned, validated, and conformed data",
+      "schemas": [
+        {
+          "name": "CURATED_DATA",
+          "comment": "Cleaned and validated data ready for analytics"
+        }
+      ]
+    },
+    "gold": {
+      "name": "GOLD",
+      "comment": "Gold layer - Business-ready aggregated and enriched data",
+      "schemas": [
         {
           "name": "ANALYTICS",
-          "comment": "Analytics data layer - transformed data for analysis"
+          "comment": "Business analytics and aggregated metrics"
         }
       ]
     }

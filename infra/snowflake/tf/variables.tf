@@ -3,11 +3,44 @@
 # ============================================================================
 
 variable "object_prefix" {
-  description = "Prefix to add to all Snowflake object names"
+  description = "Prefix to add to all Snowflake object names (e.g., 'DEV' creates 'DEV_LOAD_WH')"
   type        = string
   default     = ""
 }
 
+# ============================================================================
+# Snowflake Core Object Variables
+# ============================================================================
+# These variables are loaded from input-jsons/snowflake-core-objects.json
+# via locals.tf and passed to the respective modules
+
+# Warehouses Configuration
+# Structure: Map of warehouse objects with the following properties:
+# - name: Warehouse name (string)
+# - comment: Description of warehouse purpose (string)
+# - warehouse_size: Size of warehouse - X-SMALL, SMALL, MEDIUM, LARGE, etc. (string)
+# - auto_resume: Auto-resume on query submission (bool)
+# - auto_suspend: Seconds of inactivity before suspension (number)
+# - enable_query_acceleration: Enable query acceleration (bool)
+# - warehouse_type: STANDARD or SNOWPARK-OPTIMIZED (string)
+# - min_cluster_count: Minimum clusters for multi-cluster warehouse (number)
+# - max_cluster_count: Maximum clusters for multi-cluster warehouse (number)
+# - scaling_policy: STANDARD or ECONOMY (string)
+# - initially_suspended: Start warehouse in suspended state (bool)
+
+# Databases Configuration
+# Structure: Map of database objects with the following properties:
+# - name: Database name (string)
+# - comment: Description of database purpose (string)
+# - schemas: List of schema objects, each containing:
+#   - name: Schema name (string)
+#   - comment: Description of schema purpose (string)
+# - file_formats: Map of file format objects (optional), each containing:
+#   - name: File format name (string)
+#   - type: Format type - CSV, JSON, PARQUET, etc. (string)
+#   - Additional format-specific properties
+
+# ============================================================================
 # Commented out - not used in current configuration
 # variable "project_name" {
 #   description = "Project name for resource naming"
@@ -58,37 +91,7 @@ variable "object_prefix" {
 # Snowflake Variables
 # ============================================================================
 
-#variable "snowflake_account" {
-#  description = "Snowflake account identifier"
-#  type        = string
-#  default     = ""
-#}
 
-#variable "snowflake_user" {
-#  description = "Snowflake user for Terraform operations"
-#  type        = string
-#  default     = ""
-#}
-
-#variable "snowflake_password" {
-#  description = "Snowflake password (use either password or private_key)"
-#  type        = string
-#  sensitive   = true
-#  default     = ""
-#}
-
-#variable "snowflake_private_key" {
-#  description = "Snowflake private key for key-pair authentication"
-#  type        = string
-#  sensitive   = true
-#  default     = ""
-#}
-
-#variable "snowflake_role" {
-#  description = "Snowflake role for Terraform operations"
-#  type        = string
-#  default     = "SYSADMIN"
-#}
 
 # ============================================================================
 # AWS Variables
