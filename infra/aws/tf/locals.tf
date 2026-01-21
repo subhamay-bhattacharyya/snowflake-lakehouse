@@ -7,7 +7,7 @@ data "aws_kms_key" "kms" { key_id = local.s3_bucket.kms_key_alias }
 locals {
   current_region = data.aws_region.current.id
 
-  s3_bucket_config  = jsondecode(file("./input-jsons/s3-bucket.json"))
+  s3_bucket_config = jsondecode(file("./input-jsons/s3-bucket.json"))
 
   s3_bucket = {
     bucket_name   = "${var.project_name}-${local.s3_bucket_config["s3-bucket-name"]}-${var.environment}-${local.current_region}"
