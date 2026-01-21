@@ -2,6 +2,12 @@
 # Global Variables
 # ============================================================================
 
+variable "object_prefix" {
+  description = "Prefix to add to all Snowflake object names"
+  type        = string
+  default     = ""
+}
+
 # Commented out - not used in current configuration
 # variable "project_name" {
 #   description = "Project name for resource naming"

@@ -1,10 +1,10 @@
 # ============================================================================
-# Snowflake Core Module Variables
+# Snowflake Warehouse Variables
 # ============================================================================
 
 variable "warehouses" {
-  description = "Map of warehouses to create"
-  type = map(object({
+  description = "List of warehouse configurations as JSON objects"
+  type = list(object({
     name                      = string
     warehouse_size            = optional(string, "X-SMALL")
     auto_suspend              = optional(number, 60)
@@ -17,18 +17,4 @@ variable "warehouses" {
     scaling_policy            = optional(string, "STANDARD")
     initially_suspended       = optional(bool, true)
   }))
-  default = {}
-}
-
-variable "databases" {
-  description = "Map of databases to create with their schemas"
-  type = map(object({
-    name    = string
-    comment = optional(string, "")
-    schemas = optional(list(object({
-      name    = string
-      comment = optional(string, "")
-    })), [])
-  }))
-  default = {}
 }
