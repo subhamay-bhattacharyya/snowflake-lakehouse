@@ -63,89 +63,93 @@ jobs:
       tf-vars-file: terraform.tfvars
     secrets: inherit
 
-  gcp-storage:
-    name: Phase 2 - GCP Storage
-    needs: start-job
-    if: vars.ENABLE_GCP == 'true'
-    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
-    with:
-      cloud-provider: gcp
-      tflint-ver: ${{ vars.TF_LINT_VER }}
-      backend-type: remote
-      terraform-dir: tf
-      tf-vars-file: terraform.tfvars
-    secrets: inherit
+  # gcp-storage:
+  #   name: Phase 2 - GCP Storage
+  #   needs: start-job
+  #   if: vars.ENABLE_GCP == 'true'
+  #   uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
+  #   with:
+  #     cloud-provider: gcp
+  #     tflint-ver: ${{ vars.TF_LINT_VER }}
+  #     backend-type: remote
+  #     terraform-dir: tf
+  #     tf-vars-file: terraform.tfvars
+  #   secrets: inherit
 
-  azure-storage:
-    name: Phase 2 - Azure Storage
-    needs: start-job
-    if: vars.ENABLE_AZURE == 'true'
-    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
-    with:
-      cloud-provider: azure
-      tflint-ver: ${{ vars.TF_LINT_VER }}
-      backend-type: remote
-      terraform-dir: tf
-      tf-vars-file: terraform.tfvars
-    secrets: inherit
+  # azure-storage:
+  #   name: Phase 2 - Azure Storage
+  #   needs: start-job
+  #   if: vars.ENABLE_AZURE == 'true'
+  #   uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
+  #   with:
+  #     cloud-provider: azure
+  #     tflint-ver: ${{ vars.TF_LINT_VER }}
+  #     backend-type: remote
+  #     terraform-dir: tf
+  #     tf-vars-file: terraform.tfvars
+  #   secrets: inherit
 
   # ============================================================================
   # Phase 3: Snowflake Integrations (After Phase 1 & 2)
   # ============================================================================
+
+
+  # (needs.gcp-storage.result == 'success' || needs.gcp-storage.result == 'skipped') &&
+  # (needs.azure-storage.result == 'success' || needs.azure-storage.result == 'skipped')
 
   snowflake-integrations:
     name: Phase 3 - Snowflake Integrations
     needs: 
       - snowflake-core
       - aws-storage
-      - gcp-storage
-      - azure-storage
+      # - gcp-storage
+      # - azure-storage
     if: |
       always() && 
       needs.snowflake-core.result == 'success' &&
-      (needs.aws-storage.result == 'success' || needs.aws-storage.result == 'skipped') &&
-      (needs.gcp-storage.result == 'success' || needs.gcp-storage.result == 'skipped') &&
-      (needs.azure-storage.result == 'success' || needs.azure-storage.result == 'skipped')
+      (needs.aws-storage.result == 'success' || needs.aws-storage.result == 'skipped')
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ vars.TERRAFORM_VERSION || '1.9.6' }}
-          cli_config_credentials_token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-
-      - name: Terraform Init
-        working-directory: infra/snowflake/tf
-        run: terraform init
-
-      - name: Terraform Plan - Integrations
-        working-directory: infra/snowflake/tf
-        env:
-          TF_VAR_snowflake_account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-          TF_VAR_snowflake_user: ${{ vars.SNOWFLAKE_USER }}
-          TF_VAR_snowflake_private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          TF_VAR_snowflake_role: ${{ vars.SNOWFLAKE_ROLE || 'SYSADMIN' }}
-          TF_VAR_enable_aws: ${{ vars.ENABLE_AWS == 'true' }}
-          TF_VAR_enable_gcp: ${{ vars.ENABLE_GCP == 'true' }}
-          TF_VAR_enable_azure: ${{ vars.ENABLE_AZURE == 'true' }}
+      - name: Placeholder Step
         run: |
-          terraform plan \
-            -target=module.snowflake_integrations \
-            -out=integrations.tfplan
+          echo "Placeholder stap !!!"
+      # - name: Checkout Code
+      #   uses: actions/checkout@v4
 
-      - name: Terraform Apply - Integrations
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        working-directory: infra/snowflake/tf
-        env:
-          TF_VAR_snowflake_account: ${{ vars.SNOWFLAKE_ACCOUNT }}
-          TF_VAR_snowflake_user: ${{ vars.SNOWFLAKE_USER }}
-          TF_VAR_snowflake_private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          TF_VAR_snowflake_role: ${{ vars.SNOWFLAKE_ROLE || 'SYSADMIN' }}
-        run: terraform apply -auto-approve integrations.tfplan
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_version: ${{ vars.TERRAFORM_VERSION || '1.9.6' }}
+      #     cli_config_credentials_token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+
+      # - name: Terraform Init
+      #   working-directory: infra/snowflake/tf
+      #   run: terraform init
+
+      # - name: Terraform Plan - Integrations
+      #   working-directory: infra/snowflake/tf
+      #   env:
+      #     TF_VAR_snowflake_account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+      #     TF_VAR_snowflake_user: ${{ vars.SNOWFLAKE_USER }}
+      #     TF_VAR_snowflake_private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      #     TF_VAR_snowflake_role: ${{ vars.SNOWFLAKE_ROLE || 'SYSADMIN' }}
+      #     TF_VAR_enable_aws: ${{ vars.ENABLE_AWS == 'true' }}
+      #     TF_VAR_enable_gcp: ${{ vars.ENABLE_GCP == 'true' }}
+      #     TF_VAR_enable_azure: ${{ vars.ENABLE_AZURE == 'true' }}
+      #   run: |
+      #     terraform plan \
+      #       -target=module.snowflake_integrations \
+      #       -out=integrations.tfplan
+
+      # - name: Terraform Apply - Integrations
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   working-directory: infra/snowflake/tf
+      #   env:
+      #     TF_VAR_snowflake_account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+      #     TF_VAR_snowflake_user: ${{ vars.SNOWFLAKE_USER }}
+      #     TF_VAR_snowflake_private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      #     TF_VAR_snowflake_role: ${{ vars.SNOWFLAKE_ROLE || 'SYSADMIN' }}
+      #   run: terraform apply -auto-approve integrations.tfplan
 
   # ============================================================================
   # Release Creation
