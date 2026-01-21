@@ -33,8 +33,3 @@ output "s3_bucket_policy" {
   sensitive   = false
 }
 
-############ Snowflake Warehouse Outputs ############################
-output "snowflake_warehouses" {
-  description = "Snowflake warehouses created"
-  value       = module.snowflake.warehouses
-}

@@ -2,7 +2,7 @@
   "warehouses": {
     "load_wh": {
       "name": "LOAD_WH",
-      "comment": "This warehouse will be used for loading all the JSON files....",
+      "comment": "This warehouse will be used for loading all the JSON files.......",
       "warehouse_size": "X-SMALL",
       "auto_resume": true,
       "auto_suspend": 60,
