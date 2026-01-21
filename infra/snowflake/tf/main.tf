@@ -101,7 +101,7 @@ module "snowflake_core" {
 
 #   # External Stages
 #   stages = local.stages
-  
+
 #   # Databases (for stage creation)
 #   databases = module.snowflake_core.databases
 # }
