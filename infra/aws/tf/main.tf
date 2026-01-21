@@ -10,8 +10,8 @@ module "iam_role" {
   iam_role = local.iam_role
 }
 
-module "snowflake" {
-  source = "./modules/snowflake"
+# module "snowflake" {
+#   source = "./modules/snowflake"
 
-  warehouses = local.warehouses
-}
+#   warehouses = local.warehouses
+# }

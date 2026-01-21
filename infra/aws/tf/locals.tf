@@ -44,8 +44,6 @@ locals {
     kms_key_arn        = data.aws_kms_key.kms.arn
   }
 
-  warehouses = local.warehouses_config["warehouses"]
-
   # Map uppercase GitHub secrets to lowercase Terraform variables
   # Use uppercase vars if set, otherwise fall back to lowercase vars
   snowflake_account_input = var.SNOWFLAKE_ACCOUNT != "" ? var.SNOWFLAKE_ACCOUNT : (
