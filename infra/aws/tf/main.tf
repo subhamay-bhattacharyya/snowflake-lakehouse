@@ -9,9 +9,3 @@ module "iam_role" {
   source   = "./modules/iam"
   iam_role = local.iam_role
 }
-
-# module "snowflake" {
-#   source = "./modules/snowflake"
-
-#   warehouses = local.warehouses
-# }
