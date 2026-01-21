@@ -67,6 +67,7 @@ jobs:
       tf-vars-file: terraform.tfvars
     secrets:
       tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      aws-role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
 
   # ============================================================================
   # Phase 3: Snowflake Integrations (After Phase 1 & 2)
