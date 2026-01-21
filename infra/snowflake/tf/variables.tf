@@ -19,33 +19,33 @@ variable "environment" {
   }
 }
 
-variable "tags" {
-  description = "Common tags for all resources"
-  type        = map(string)
-  default     = {}
-}
+# variable "tags" {
+#   description = "Common tags for all resources"
+#   type        = map(string)
+#   default     = {}
+# }
 
 # ============================================================================
 # Cloud Provider Enablement
 # ============================================================================
 
-variable "enable_aws" {
-  description = "Enable AWS resources (S3, IAM)"
-  type        = bool
-  default     = true
-}
+# variable "enable_aws" {
+#   description = "Enable AWS resources (S3, IAM)"
+#   type        = bool
+#   default     = true
+# }
 
-variable "enable_gcp" {
-  description = "Enable GCP resources (GCS, Service Account)"
-  type        = bool
-  default     = false
-}
+# variable "enable_gcp" {
+#   description = "Enable GCP resources (GCS, Service Account)"
+#   type        = bool
+#   default     = false
+# }
 
-variable "enable_azure" {
-  description = "Enable Azure resources (Blob Storage, Managed Identity)"
-  type        = bool
-  default     = false
-}
+# variable "enable_azure" {
+#   description = "Enable Azure resources (Blob Storage, Managed Identity)"
+#   type        = bool
+#   default     = false
+# }
 
 # ============================================================================
 # Snowflake Variables

@@ -2,13 +2,9 @@
 # Local Values
 # ============================================================================
 
-data "aws_region" "current" {
-  count = var.enable_aws ? 1 : 0
-}
+data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {
-  count = var.enable_aws ? 1 : 0
-}
+data "aws_caller_identity" "current" {}
 
 locals {
   # -------------------------------------------------------------------------
@@ -19,12 +15,6 @@ locals {
   warehouses            = local.snowflake_core_config["warehouses"]
   databases             = local.snowflake_core_config["databases"]
 
-  # -------------------------------------------------------------------------
-  # AWS Configuration
-  # -------------------------------------------------------------------------
-  
-  aws_s3_config = var.enable_aws ? jsondecode(file("${path.module}/input-jsons/aws-s3.json")) : {}
-  
   # -------------------------------------------------------------------------
   # Snowflake Integrations (from JSON files)
   # -------------------------------------------------------------------------
