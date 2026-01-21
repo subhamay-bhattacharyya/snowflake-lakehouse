@@ -2,22 +2,23 @@
 # Global Variables
 # ============================================================================
 
-variable "project_name" {
-  description = "Project name for resource naming"
-  type        = string
-  default     = "snw-lkh"
-}
+# Commented out - not used in current configuration
+# variable "project_name" {
+#   description = "Project name for resource naming"
+#   type        = string
+#   default     = "snw-lkh"
+# }
 
-variable "environment" {
-  description = "Environment name (dev, staging, prod)"
-  type        = string
-  default     = "devl"
+# variable "environment" {
+#   description = "Environment name (dev, staging, prod)"
+#   type        = string
+#   default     = "devl"
 
-  validation {
-    condition     = contains(["devl", "test", "prod"], var.environment)
-    error_message = "Environment must be devl, test, or prod."
-  }
-}
+#   validation {
+#     condition     = contains(["devl", "test", "prod"], var.environment)
+#     error_message = "Environment must be devl, test, or prod."
+#   }
+# }
 
 # variable "tags" {
 #   description = "Common tags for all resources"
@@ -87,40 +88,9 @@ variable "environment" {
 # AWS Variables
 # ============================================================================
 
-variable "aws_region" {
-  description = "AWS region for resources"
-  type        = string
-  default     = "us-east-1"
-}
-
-# ============================================================================
-# GCP Variables
-# ============================================================================
-
-variable "gcp_project" {
-  description = "GCP project ID"
-  type        = string
-  default     = ""
-}
-
-variable "gcp_region" {
-  description = "GCP region for resources"
-  type        = string
-  default     = "us-central1"
-}
-
-# ============================================================================
-# Azure Variables
-# ============================================================================
-
-variable "azure_subscription_id" {
-  description = "Azure subscription ID"
-  type        = string
-  default     = ""
-}
-
-variable "azure_location" {
-  description = "Azure location for resources"
-  type        = string
-  default     = "eastus"
-}
+# Commented out - not used in current configuration
+# variable "aws_region" {
+#   description = "AWS region for resources"
+#   type        = string
+#   default     = "us-east-1"
+# }

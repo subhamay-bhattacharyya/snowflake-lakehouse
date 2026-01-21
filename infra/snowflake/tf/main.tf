@@ -7,6 +7,17 @@
 # 3. Snowflake integrations (storage integrations, external stages)
 # ============================================================================
 
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    snowflake = {
+      source  = "Snowflake-Labs/snowflake"
+      version = "~> 0.94"
+    }
+  }
+}
+
 # ----------------------------------------------------------------------------
 # Phase 1: Snowflake Core Resources (Cloud-agnostic)
 # ----------------------------------------------------------------------------
