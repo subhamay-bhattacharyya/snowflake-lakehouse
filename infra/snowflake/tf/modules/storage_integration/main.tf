@@ -1,3 +1,5 @@
+# --- root/snowflake/tf/modules/storage_integration/main.tf ---
+
 # ============================================================================
 # Snowflake Storage Integration Sub-Module
 # ============================================================================

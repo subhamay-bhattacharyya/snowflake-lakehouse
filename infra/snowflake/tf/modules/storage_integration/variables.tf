@@ -1,3 +1,5 @@
+# --- root/snowflake/tf/modules/storage_integration/variables.tf ---
+
 # ============================================================================
 # Snowflake Storage Integration Variables
 # ============================================================================

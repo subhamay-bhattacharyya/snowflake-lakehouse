@@ -7,6 +7,11 @@ variable "object_prefix" {
   type        = string
   default     = ""
 }
+variable "snowflake_private_key_path" {
+  description = "Snowflake private key path"
+  type        = string
+  default     = "/Users/subhamaybhattacharyya/Projects/snowflake-lakehouse/infra/snowflake/tf/snowflake_tf_keys/snowflake_tf_key.p8"
+}
 
 # ============================================================================
 # Snowflake Core Object Variables

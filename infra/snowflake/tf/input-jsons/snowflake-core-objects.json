@@ -104,6 +104,7 @@
           "storage_provider": "S3",
           "enabled": true,
           "storage_allowed_locations": ["s3://my-bucket/*"],
+          "storage_aws_role_arn": "arn:aws:iam::111122223333:role/iam-role-name",
           "storage_blocked_locations": [],
           "comment": "S3 storage integration - allows access to entire my-bucket"
         }

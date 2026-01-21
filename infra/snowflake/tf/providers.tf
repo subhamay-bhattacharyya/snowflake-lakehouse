@@ -18,3 +18,12 @@ terraform {
 # ============================================================================
 # Authentication: Uses private key authentication (passkey)
 # The private key should be in PEM format without encryption
+provider "snowflake" {
+  organization_name = "AGXUOKJ"
+  account_name      = "JKC15404"
+  user              = "GH_ACTIONS_USER"
+  authenticator     = "JWT"
+  private_key       = file(var.snowflake_private_key_path)
+  role              = "ACCOUNTADMIN"
+  warehouse         = "UTIL_WH"
+}

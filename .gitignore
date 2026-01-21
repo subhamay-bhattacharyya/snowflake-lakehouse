@@ -85,4 +85,4 @@ dist/
 awscliv2.zip
 LICENSE.txt
 aws/*
-rsa_key.*
+snowflake_tf_keys/*

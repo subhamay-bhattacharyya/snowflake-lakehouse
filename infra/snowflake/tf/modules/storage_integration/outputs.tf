@@ -1,3 +1,5 @@
+# --- root/snowflake/tf/modules/storage_integration/outputs.tf ---
+
 # ============================================================================
 # Snowflake Storage Integration Outputs
 # ============================================================================

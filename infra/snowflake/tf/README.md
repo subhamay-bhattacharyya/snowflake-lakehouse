@@ -83,11 +83,28 @@ infra/snowflake/tf/
 
 ## Quick Start
 
-### 1. Configure Codespaces Secrets
+### 1. Grant Required Permissions
+
+Before running Terraform, ensure the Snowflake user has the necessary privileges:
+
+```sql
+-- Switch to ACCOUNTADMIN role (you must already have this role)
+USE ROLE ACCOUNTADMIN;
+
+-- Grant ACCOUNTADMIN role to the user
+GRANT ROLE ACCOUNTADMIN TO USER GH_ACTIONS_USER;
+
+-- Verify the grant
+SHOW GRANTS TO USER GH_ACTIONS_USER;
+```
+
+**Note:** Storage integrations require ACCOUNTADMIN privileges. For production, consider creating a custom role with specific privileges instead of granting full ACCOUNTADMIN access.
+
+### 2. Configure Codespaces Secrets
 
 Same as before - see [../aws/tf/README.md](../aws/tf/README.md) for details.
 
-### 2. Choose Cloud Providers
+### 3. Choose Cloud Providers
 
 Edit `terraform.tfvars`:
 
@@ -100,7 +117,7 @@ enable_azure = false  # Azure Blob
 
 **See detailed guide:** [CLOUD_PROVIDERS.md](./CLOUD_PROVIDERS.md)
 
-### 3. Configure Resources
+### 4. Configure Resources
 
 Edit JSON files in `input-jsons/`:
 
@@ -111,7 +128,7 @@ Edit JSON files in `input-jsons/`:
 - `azure-blob.json` - Azure Blob configuration (if enable_azure = true)
 - `stages.json` - External stages
 
-### 4. Run Terraform
+### 5. Run Terraform
 
 ```bash
 cd infra/snowflake/tf
