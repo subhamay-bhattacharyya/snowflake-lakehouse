@@ -33,7 +33,7 @@ jobs:
   # ============================================================================
   
   snowflake-core:
-    name: Phase 1 - Snowflake Core
+    name: Snowflake
     needs: start-job
     uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@feature/GHA-0033-enhancement-add-snowflake
     with:
@@ -50,7 +50,7 @@ jobs:
   # ============================================================================
 
   aws-storage:
-    name: Phase 2 - AWS Storage
+    name: AWS
     needs: start-job
     if: vars.ENABLE_AWS == 'true'
     uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
@@ -98,7 +98,7 @@ jobs:
   # (needs.azure-storage.result == 'success' || needs.azure-storage.result == 'skipped')
 
   snowflake-integrations:
-    name: Phase 3 - Snowflake Integrations
+    name: Snowflake
     needs: 
       - snowflake-core
       - aws-storage
@@ -159,7 +159,6 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     needs: 
-      - snowflake-core
       - snowflake-integrations
     if: github.ref == 'refs/heads/main'
     permissions:
