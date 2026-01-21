@@ -26,18 +26,6 @@ locals {
   aws_s3_config = var.enable_aws ? jsondecode(file("${path.module}/input-jsons/aws-s3.json")) : {}
   
   # -------------------------------------------------------------------------
-  # GCP Configuration
-  # -------------------------------------------------------------------------
-  
-  gcp_gcs_config = var.enable_gcp ? jsondecode(file("${path.module}/input-jsons/gcp-gcs.json")) : {}
-  
-  # -------------------------------------------------------------------------
-  # Azure Configuration
-  # -------------------------------------------------------------------------
-  
-  azure_blob_config = var.enable_azure ? jsondecode(file("${path.module}/input-jsons/azure-blob.json")) : {}
-  
-  # -------------------------------------------------------------------------
   # Snowflake Integrations (from JSON files)
   # -------------------------------------------------------------------------
   
