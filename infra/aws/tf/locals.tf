@@ -8,7 +8,6 @@ locals {
   current_region = data.aws_region.current.id
 
   s3_bucket_config  = jsondecode(file("./input-jsons/s3-bucket.json"))
-  warehouses_config = jsondecode(file("./input-jsons/warehouses.json"))
 
   s3_bucket = {
     bucket_name   = "${var.project_name}-${local.s3_bucket_config["s3-bucket-name"]}-${var.environment}-${local.current_region}"

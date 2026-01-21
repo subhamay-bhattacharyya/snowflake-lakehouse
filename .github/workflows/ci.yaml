@@ -47,6 +47,7 @@ jobs:
       snowflake-role: ${{ vars.SNOWFLAKE_ROLE }}
     secrets:
       tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
       
 
   # ============================================================================
