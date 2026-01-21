@@ -63,32 +63,6 @@ jobs:
       tf-vars-file: terraform.tfvars
     secrets: inherit
 
-  # gcp-storage:
-  #   name: Phase 2 - GCP Storage
-  #   needs: start-job
-  #   if: vars.ENABLE_GCP == 'true'
-  #   uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
-  #   with:
-  #     cloud-provider: gcp
-  #     tflint-ver: ${{ vars.TF_LINT_VER }}
-  #     backend-type: remote
-  #     terraform-dir: tf
-  #     tf-vars-file: terraform.tfvars
-  #   secrets: inherit
-
-  # azure-storage:
-  #   name: Phase 2 - Azure Storage
-  #   needs: start-job
-  #   if: vars.ENABLE_AZURE == 'true'
-  #   uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
-  #   with:
-  #     cloud-provider: azure
-  #     tflint-ver: ${{ vars.TF_LINT_VER }}
-  #     backend-type: remote
-  #     terraform-dir: tf
-  #     tf-vars-file: terraform.tfvars
-  #   secrets: inherit
-
   # ============================================================================
   # Phase 3: Snowflake Integrations (After Phase 1 & 2)
   # ============================================================================
@@ -102,8 +76,6 @@ jobs:
     needs: 
       - snowflake-core
       - aws-storage
-      # - gcp-storage
-      # - azure-storage
     if: |
       always() && 
       needs.snowflake-core.result == 'success' &&
