@@ -1,4 +1,4 @@
-# --- root/aws/tf/root/outputs.tf ---
+# -- infra/aws/tf/outputs.tf (Child Module)
 
 ############ S3 Bucket Outputs ############################
 output "s3_bucket_name" {
@@ -17,19 +17,21 @@ output "s3_versioning_status" {
   description = "S3 bucket versioning status"
   value       = module.s3.versioning_status
 }
-output "assume_role_policy" {
-  description = "Assume role policy document for IAM role"
-  value       = local.assume_role_policy
-  sensitive   = true
-}
+
 ############ IAM Role Outputs ############################
 output "iam_role_arn" {
-  description = "IAM role arn for the Lambda get endpoint function"
+  description = "IAM role ARN for Snowflake storage integration"
   value       = module.iam_role.iam_role_arn
 }
-output "s3_bucket_policy" {
-  description = "S3 bucket policy"
-  value       = local.s3_bucket.bucket_policy
-  sensitive   = false
+
+############ IAM Role Final (Phase 3) Outputs ############################
+output "trust_policy_updated" {
+  description = "Whether the trust policy was updated"
+  value       = module.iam_role_final.trust_policy_updated
+}
+
+output "trust_policy" {
+  description = "The trust policy that was applied"
+  value       = module.iam_role_final.trust_policy
 }
 

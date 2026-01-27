@@ -86,3 +86,4 @@ awscliv2.zip
 LICENSE.txt
 aws/*
 snowflake_tf_keys/*
+*.zip

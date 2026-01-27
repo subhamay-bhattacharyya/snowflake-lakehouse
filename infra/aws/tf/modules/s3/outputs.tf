@@ -1,4 +1,4 @@
-# --- root/aws/tf/modules/s3/outputs.tf ---
+# -- infra/aws/tf/modules/s3/outputs.tf (Child Module)
 
 output "name" {
   description = "S3 bucket name"

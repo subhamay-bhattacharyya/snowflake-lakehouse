@@ -1,110 +1,51 @@
+# -- infra/snowflake/tf/variables.tf (Child Module)
 # ============================================================================
-# Global Variables
+# Snowflake Module Variables
 # ============================================================================
 
-variable "object_prefix" {
-  description = "Prefix to add to all Snowflake object names (e.g., 'DEV' creates 'DEV_LOAD_WH')"
-  type        = string
-  default     = ""
-}
-variable "snowflake_private_key_path" {
-  description = "Snowflake private key path"
-  type        = string
-  default     = "/Users/subhamaybhattacharyya/Projects/snowflake-lakehouse/infra/snowflake/tf/snowflake_tf_keys/snowflake_tf_key.p8"
+variable "warehouse_config" {
+  description = "Warehouse configuration map"
+  type        = map(any)
 }
 
-# ============================================================================
-# Snowflake Core Object Variables
-# ============================================================================
-# These variables are loaded from input-jsons/snowflake-core-objects.json
-# via locals.tf and passed to the respective modules
+variable "database_config" {
+  description = "Database configuration map"
+  type        = map(any)
+  default     = {}
+}
 
-# Warehouses Configuration
-# Structure: Map of warehouse objects with the following properties:
-# - name: Warehouse name (string)
-# - comment: Description of warehouse purpose (string)
-# - warehouse_size: Size of warehouse - X-SMALL, SMALL, MEDIUM, LARGE, etc. (string)
-# - auto_resume: Auto-resume on query submission (bool)
-# - auto_suspend: Seconds of inactivity before suspension (number)
-# - enable_query_acceleration: Enable query acceleration (bool)
-# - warehouse_type: STANDARD or SNOWPARK-OPTIMIZED (string)
-# - min_cluster_count: Minimum clusters for multi-cluster warehouse (number)
-# - max_cluster_count: Maximum clusters for multi-cluster warehouse (number)
-# - scaling_policy: STANDARD or ECONOMY (string)
-# - initially_suspended: Start warehouse in suspended state (bool)
+variable "schema_config" {
+  description = "Schema configuration map"
+  type        = map(any)
+  default     = {}
+}
 
-# Databases Configuration
-# Structure: Map of database objects with the following properties:
-# - name: Database name (string)
-# - comment: Description of database purpose (string)
-# - schemas: List of schema objects, each containing:
-#   - name: Schema name (string)
-#   - comment: Description of schema purpose (string)
-# - file_formats: Map of file format objects (optional), each containing:
-#   - name: File format name (string)
-#   - type: Format type - CSV, JSON, PARQUET, etc. (string)
-#   - Additional format-specific properties
+variable "file_format_config" {
+  description = "File format configuration map"
+  type        = map(any)
+  default     = {}
+}
 
-# ============================================================================
-# Commented out - not used in current configuration
-# variable "project_name" {
-#   description = "Project name for resource naming"
-#   type        = string
-#   default     = "snw-lkh"
-# }
+variable "storage_integration_config" {
+  description = "Storage integration configuration map"
+  type        = map(any)
+  default     = {}
+}
 
-# variable "environment" {
-#   description = "Environment name (dev, staging, prod)"
-#   type        = string
-#   default     = "devl"
+variable "stage_config" {
+  description = "Stage configuration map"
+  type        = map(any)
+  default     = {}
+}
 
-#   validation {
-#     condition     = contains(["devl", "test", "prod"], var.environment)
-#     error_message = "Environment must be devl, test, or prod."
-#   }
-# }
+variable "table_config" {
+  description = "Table configuration map"
+  type        = map(any)
+  default     = {}
+}
 
-# variable "tags" {
-#   description = "Common tags for all resources"
-#   type        = map(string)
-#   default     = {}
-# }
-
-# ============================================================================
-# Cloud Provider Enablement
-# ============================================================================
-
-# variable "enable_aws" {
-#   description = "Enable AWS resources (S3, IAM)"
-#   type        = bool
-#   default     = true
-# }
-
-# variable "enable_gcp" {
-#   description = "Enable GCP resources (GCS, Service Account)"
-#   type        = bool
-#   default     = false
-# }
-
-# variable "enable_azure" {
-#   description = "Enable Azure resources (Blob Storage, Managed Identity)"
-#   type        = bool
-#   default     = false
-# }
-
-# ============================================================================
-# Snowflake Variables
-# ============================================================================
-
-
-
-# ============================================================================
-# AWS Variables
-# ============================================================================
-
-# Commented out - not used in current configuration
-# variable "aws_region" {
-#   description = "AWS region for resources"
-#   type        = string
-#   default     = "us-east-1"
-# }
+variable "snowpipe_config" {
+  description = "Snowpipe configuration map"
+  type        = map(any)
+  default     = {}
+}

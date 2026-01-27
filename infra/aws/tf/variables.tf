@@ -1,6 +1,28 @@
+# -- infra/aws/tf/variables.tf (Child Module)
 # ============================================================================
 # AWS Infrastructure Variables
 # ============================================================================
+
+variable "s3_config" {
+  description = "S3 bucket configuration passed from root module"
+  type = object({
+    bucket_name   = string
+    versioning    = bool
+    kms_key_alias = string
+    bucket_policy = string
+    bucket_keys   = list(string)
+  })
+}
+
+variable "iam_role_config" {
+  description = "IAM role configuration for Snowflake storage integration"
+  type = object({
+    role_name          = string
+    assume_role_policy = string
+    s3_bucket_arn      = string
+    kms_key_arn        = string
+  })
+}
 
 variable "aws_region" {
   description = "AWS region for resources"
@@ -32,6 +54,16 @@ variable "snowflake_principal_arn" {
   description = "Snowflake principal ARN for IAM role trust relationship"
   type        = string
   default     = ""
+}
+variable "snowflake_iam_user_arn" {
+  description = "Snowflake IAM user ARN from storage integration (STORAGE_AWS_IAM_USER_ARN)"
+  type        = string
+  default     = ""
+}
+variable "update_trust_policy" {
+  description = "Whether to update the IAM role trust policy with Snowflake values (Phase 3)"
+  type        = bool
+  default     = false
 }
 # variable "enable_s3_notifications" {
 #   description = "Enable S3 event notifications for Snowpipe"

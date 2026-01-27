@@ -1,8 +1,7 @@
+# -- infra/snowflake/tf/terraform.tfvars (Child Module)
 # ============================================================================
 # Terraform Variables
 # ============================================================================
-
-# Prefix for all Snowflake object names
-# Example: "DEV" will create warehouses like "DEV_LOAD_WH", "DEV_TRANSFORM_WH"
-# Leave empty ("") for no prefix
-object_prefix = "SB"
+# NOTE: Variables are passed from the root module (infra/main.tf)
+# This file is kept for reference but values come from root module.
+# ============================================================================

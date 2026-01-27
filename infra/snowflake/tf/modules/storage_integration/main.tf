@@ -13,7 +13,8 @@ resource "snowflake_storage_integration" "this" {
   comment = lookup(each.value, "comment", "")
 
   # Storage provider configuration
-  storage_provider = each.value.storage_provider
+  storage_provider        = each.value.storage_provider
+  storage_aws_external_id = each.value.storage_aws_external_id
 
   # S3 specific
   storage_aws_role_arn = lookup(each.value, "storage_aws_role_arn", null)

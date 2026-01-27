@@ -1,4 +1,4 @@
-# --- root/aws/tf/modules/s3/main.tf ---
+# -- infra/aws/tf/modules/s3/main.tf (Child Module)
 
 resource "aws_s3_bucket" "this" {
   bucket        = var.s3_bucket.bucket_name
@@ -31,7 +31,16 @@ resource "aws_s3_bucket_public_access_block" "this" {
   restrict_public_buckets = true
 }
 
-# resource "aws_s3_bucket_policy" "this" {
-#   bucket = aws_s3_bucket.this.id
-#   policy = var.s3_bucket.bucket_policy
-# }
+resource "aws_s3_bucket_policy" "this" {
+  bucket = aws_s3_bucket.this.id
+  policy = var.s3_bucket.bucket_policy
+}
+
+# Create S3 "folders" (empty objects with trailing slash)
+resource "aws_s3_object" "folders" {
+  for_each = toset(var.s3_bucket.bucket_keys)
+
+  bucket       = aws_s3_bucket.this.id
+  key          = endswith(each.value, "/") ? each.value : "${each.value}/"
+  content_type = "application/x-directory"
+}
