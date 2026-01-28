@@ -1,0 +1,29 @@
+name: Destroy Snowflake Lakehouse Platform
+run-name: >
+  Destroy Platform by ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-destroy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write      # needed for OIDC
+  contents: read       # needed for checkout / Terraform
+
+jobs:
+  terraform-destroy-platform:
+    name: Destroy Platform (AWS + Snowflake)
+    uses: subhamay-bhattacharyya-gha/terraform-destroy-wf/.github/workflows/terraform-destroy.yaml@
+    with:
+      cloud-provider: platform
+      backend-type: remote
+      aws-region: ${{ vars.AWS_REGION }}
+      snowflake-user: ${{ vars.SNOWFLAKE_USER }}
+      snowflake-account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+    secrets:
+      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      aws-role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
