@@ -16,7 +16,7 @@ permissions:
 jobs:
   terraform-destroy-platform:
     name: Destroy Platform (AWS + Snowflake)
-    uses: subhamay-bhattacharyya-gha/terraform-destroy-wf/.github/workflows/terraform-destroy.yaml@
+    uses: subhamay-bhattacharyya-gha/terraform-destroy-wf/.github/workflows/terraform-destroy.yaml@feature/GHA-0032-add-platform-based-multi
     with:
       cloud-provider: platform
       backend-type: remote
