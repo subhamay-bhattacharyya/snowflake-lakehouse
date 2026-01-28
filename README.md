@@ -229,7 +229,8 @@ Set up GitHub Actions authentication. See [.github/SETUP.md](.github/SETUP.md) f
 #### Required Variables (Settings → Secrets and variables → Actions → Variables):
 
 **Snowflake Configuration:**
-- `SNOWFLAKE_ACCOUNT` - Your account identifier (e.g., `AGXUOKJ-JKC15404`)
+- `SNOWFLAKE_ORGANIZATION_NAME` - Your Snowflake organization name (e.g., `AGXUOKJ`)
+- `SNOWFLAKE_ACCOUNT_NAME` - Your Snowflake account name (e.g., `JKC15404`)
 - `SNOWFLAKE_USER` - Service account username (e.g., `GH_ACTIONS_USER`)
 - `SNOWFLAKE_ROLE` - Snowflake role (e.g., `SYSADMIN`)
 
@@ -312,7 +313,8 @@ Add these secrets (copy from your GitHub Actions):
 **Snowflake Authentication:**
 | Secret Name | Copy From Actions |
 |-------------|-------------------|
-| `TF_VAR_snowflake_account` | `SNOWFLAKE_ACCOUNT` variable |
+| `TF_VAR_snowflake_organization_name` | `SNOWFLAKE_ORGANIZATION_NAME` variable |
+| `TF_VAR_snowflake_account_name` | `SNOWFLAKE_ACCOUNT_NAME` variable |
 | `TF_VAR_snowflake_user` | `SNOWFLAKE_USER` variable |
 | `TF_VAR_snowflake_private_key` | `SNOWFLAKE_PRIVATE_KEY` secret |
 | `TF_VAR_snowflake_role` | Set to `SYSADMIN` |

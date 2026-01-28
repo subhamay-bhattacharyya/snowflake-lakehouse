@@ -43,4 +43,7 @@ resource "aws_s3_object" "folders" {
   bucket       = aws_s3_bucket.this.id
   key          = endswith(each.value, "/") ? each.value : "${each.value}/"
   content_type = "application/x-directory"
+
+  server_side_encryption = "aws:kms"
+  kms_key_id             = aws_kms_key.s3_bucket_key.arn
 }
