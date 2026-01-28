@@ -4,7 +4,7 @@
 # ============================================================================
 
 variable "s3_config" {
-  description = "S3 bucket configuration passed from root module"
+  description = "S3 bucket configuration passed from root module."
   type = object({
     bucket_name   = string
     versioning    = bool
