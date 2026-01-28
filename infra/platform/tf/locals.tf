@@ -5,14 +5,21 @@
 
 # data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
-data "aws_kms_key" "kms" { key_id = local.s3_config.kms_key_alias }
+
+# Compute KMS key alias first (no dependency on s3_config)
+locals {
+  kms_key_alias_raw = jsondecode(file("${path.module}/${var.aws_config_path}")).aws.s3.kms_key_alias
+  kms_key_alias     = startswith(local.kms_key_alias_raw, "alias/") ? local.kms_key_alias_raw : "alias/${local.kms_key_alias_raw}"
+}
+
+data "aws_kms_key" "kms" { key_id = local.kms_key_alias }
 
 locals {
   # current_region = data.aws_region.current.id
 
-  # Parse config from JSON files (relative to project root)
-  aws_config_file       = jsondecode(file("${path.module}/../../../input-jsons/aws/config.json"))
-  snowflake_config_file = jsondecode(file("${path.module}/../../../input-jsons/snowflake/config.json"))
+  # Parse config from JSON files (relative to module path)
+  aws_config_file       = jsondecode(file("${path.module}/${var.aws_config_path}"))
+  snowflake_config_file = jsondecode(file("${path.module}/${var.snowflake_config_path}"))
 
   # Extract nested sections
   aws_config       = local.aws_config_file.aws
@@ -46,7 +53,7 @@ locals {
   s3_config = {
     bucket_name   = "${var.project_code}-${local.aws_config.s3.bucket_name}-${var.environment}-${local.aws_config.region}"
     versioning    = local.aws_config.s3.versioning
-    kms_key_alias = startswith(local.aws_config.s3.kms_key_alias, "alias/") ? local.aws_config.s3.kms_key_alias : "alias/${local.aws_config.s3.kms_key_alias}"
+    kms_key_alias = local.kms_key_alias
     kms_key_arn   = data.aws_kms_key.kms.arn
     bucket_keys   = lookup(local.aws_config.s3, "bucket_keys", [])
     bucket_policy = templatefile("${path.module}/../../aws/tf/templates/bucket-policy/s3-bucket-policy.tpl", {

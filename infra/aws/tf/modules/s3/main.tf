@@ -37,13 +37,13 @@ resource "aws_s3_bucket_policy" "this" {
 }
 
 # Create S3 "folders" (empty objects with trailing slash)
-# resource "aws_s3_object" "folders" {
-#   for_each = toset(var.s3_bucket.bucket_keys)
+resource "aws_s3_object" "folders" {
+  for_each = toset(var.s3_bucket.bucket_keys)
 
-#   bucket       = aws_s3_bucket.this.id
-#   key          = endswith(each.value, "/") ? each.value : "${each.value}/"
-#   content_type = "application/x-directory"
+  bucket       = aws_s3_bucket.this.id
+  key          = endswith(each.value, "/") ? each.value : "${each.value}/"
+  content_type = "application/x-directory"
 
-#   server_side_encryption = "aws:kms"
-#   kms_key_id             = var.s3_bucket.kms_key_arn
-# }
+  server_side_encryption = "aws:kms"
+  kms_key_id             = var.s3_bucket.kms_key_arn
+}
