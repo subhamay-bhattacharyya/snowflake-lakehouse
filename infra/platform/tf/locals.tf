@@ -3,7 +3,7 @@
 # Local Values
 # ============================================================================
 
-data "aws_region" "current" {}
+# data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_kms_key" "kms" { key_id = local.s3_config.kms_key_alias }
 
