@@ -47,7 +47,6 @@ locals {
     bucket_name   = "${var.project_code}-${local.aws_config.s3.bucket_name}-${var.environment}-${local.aws_config.region}"
     versioning    = local.aws_config.s3.versioning
     kms_key_alias = startswith(local.aws_config.s3.kms_key_alias, "alias/") ? local.aws_config.s3.kms_key_alias : "alias/${local.aws_config.s3.kms_key_alias}"
-    kms_key_arn   = data.aws_kms_key.kms.arn
     bucket_keys   = lookup(local.aws_config.s3, "bucket_keys", [])
     bucket_policy = templatefile("${path.module}/../../aws/tf/templates/bucket-policy/s3-bucket-policy.tpl", {
       aws_account_id = data.aws_caller_identity.current.account_id
