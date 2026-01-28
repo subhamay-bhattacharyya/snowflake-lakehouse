@@ -1,151 +1,76 @@
+# -- infra/aws/tf/main.tf (Child Module)
 # ============================================================================
 # AWS Infrastructure for Snowflake Lakehouse
-# Description: S3 buckets, IAM roles, and other AWS resources
+# ============================================================================
+#
+# ┌─────────────────────────────────────────────────────────────┐
+# │  PHASE 1: AWS Resources (infra/aws/tf)        ← YOU ARE HERE│
+# ├─────────────────────────────────────────────────────────────┤
+# │  1. S3 Bucket                                               │
+# │  2. IAM Role (initial - with placeholder trust policy)      │
+# └─────────────────────────────────────────────────────────────┘
+#                             │
+#                             ▼
+# ┌─────────────────────────────────────────────────────────────┐
+# │  PHASE 2: Snowflake Resources (infra/snowflake/tf)          │
+# ├─────────────────────────────────────────────────────────────┤
+# │  1. Warehouses                                              │
+# │  2. Databases                                               │
+# │  3. File Formats                                            │
+# │  4. Storage Integration ← references IAM Role ARN           │
+# │     └─► Outputs: STORAGE_AWS_IAM_USER_ARN                   │
+# │                  STORAGE_AWS_EXTERNAL_ID                    │
+# │  5. Stages                                                  │
+# │  6. Snowpipes                                               │
+# └─────────────────────────────────────────────────────────────┘
+#                             │
+#                             ▼
+# ┌─────────────────────────────────────────────────────────────┐
+# │  PHASE 3: AWS Trust Policy Update (infra/aws/tf)            │
+# ├─────────────────────────────────────────────────────────────┤
+# │  Update IAM Role trust policy with Snowflake's              │
+# │  external ID and IAM user ARN                               │
+# └─────────────────────────────────────────────────────────────┘
+#
 # ============================================================================
 
-terraform {
-  required_version = ">= 1.0"
-  
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
+# ----------------------------------------------------------------------------
+# Phase 1: AWS Resources
+# ----------------------------------------------------------------------------
+
+# 1. S3 Bucket for Snowflake external stage
+module "s3" {
+  source = "./modules/s3"
+
+  s3_bucket = {
+    bucket_name   = var.s3_config.bucket_name
+    versioning    = var.s3_config.versioning
+    kms_key_alias = var.s3_config.kms_key_alias
+    bucket_policy = var.s3_config.bucket_policy
+    bucket_keys   = var.s3_config.bucket_keys
   }
 }
 
-provider "aws" {
-  region = var.aws_region
-  
-  default_tags {
-    tags = {
-      Project     = "Snowflake-Lakehouse"
-      ManagedBy   = "Terraform"
-      Environment = var.environment
-    }
-  }
+# 2. IAM Role for Snowflake storage integration
+#    - First apply: creates role with placeholder trust policy
+#    - After Phase 2: re-apply with snowflake_principal_arn and snowflake_external_id
+module "iam_role" {
+  source   = "./modules/iam"
+  iam_role = var.iam_role_config
+
+  depends_on = [module.s3]
 }
 
-# S3 bucket for raw data
-resource "aws_s3_bucket" "raw_data" {
-  bucket = "${var.project_name}-raw-data-${var.environment}"
-  
-  tags = {
-    Name        = "Raw Data Bucket"
-    Description = "Raw data ingestion for Snowflake"
-  }
-}
+# ----------------------------------------------------------------------------
+# Phase 3: Update IAM Role Trust Policy with Snowflake values
+# ----------------------------------------------------------------------------
+module "iam_role_final" {
+  source = "./modules/iam_role_final"
 
-# S3 bucket versioning
-resource "aws_s3_bucket_versioning" "raw_data" {
-  bucket = aws_s3_bucket.raw_data.id
-  
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
+  enabled                = var.update_trust_policy
+  role_name              = var.iam_role_config.role_name
+  snowflake_iam_user_arn = var.snowflake_iam_user_arn
+  snowflake_external_id  = var.snowflake_external_id
 
-# S3 bucket encryption
-resource "aws_s3_bucket_server_side_encryption_configuration" "raw_data" {
-  bucket = aws_s3_bucket.raw_data.id
-  
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-# S3 bucket for processed data
-resource "aws_s3_bucket" "processed_data" {
-  bucket = "${var.project_name}-processed-data-${var.environment}"
-  
-  tags = {
-    Name        = "Processed Data Bucket"
-    Description = "Processed data for Snowflake analytics"
-  }
-}
-
-# S3 bucket versioning for processed data
-resource "aws_s3_bucket_versioning" "processed_data" {
-  bucket = aws_s3_bucket.processed_data.id
-  
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-# S3 bucket encryption for processed data
-resource "aws_s3_bucket_server_side_encryption_configuration" "processed_data" {
-  bucket = aws_s3_bucket.processed_data.id
-  
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-# IAM role for Snowflake
-resource "aws_iam_role" "snowflake_role" {
-  name = "${var.project_name}-snowflake-role-${var.environment}"
-  
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          AWS = var.snowflake_external_id
-        }
-        Action = "sts:AssumeRole"
-        Condition = {
-          StringEquals = {
-            "sts:ExternalId" = var.snowflake_external_id
-          }
-        }
-      }
-    ]
-  })
-  
-  tags = {
-    Name = "Snowflake IAM Role"
-  }
-}
-
-# IAM policy for Snowflake S3 access
-resource "aws_iam_role_policy" "snowflake_s3_policy" {
-  name = "${var.project_name}-snowflake-s3-policy"
-  role = aws_iam_role.snowflake_role.id
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:ListBucket",
-          "s3:GetBucketLocation"
-        ]
-        Resource = [
-          aws_s3_bucket.raw_data.arn,
-          "${aws_s3_bucket.raw_data.arn}/*",
-          aws_s3_bucket.processed_data.arn,
-          "${aws_s3_bucket.processed_data.arn}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          "${aws_s3_bucket.processed_data.arn}/*"
-        ]
-      }
-    ]
-  })
+  depends_on = [module.iam_role]
 }

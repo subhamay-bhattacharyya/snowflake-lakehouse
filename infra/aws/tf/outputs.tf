@@ -1,33 +1,34 @@
-# ============================================================================
-# AWS Infrastructure Outputs
-# ============================================================================
+# -- infra/aws/tf/outputs.tf (Child Module)
 
-output "raw_data_bucket_name" {
-  description = "Name of the raw data S3 bucket"
-  value       = aws_s3_bucket.raw_data.id
+############ S3 Bucket Outputs ############################
+output "s3_bucket_name" {
+  description = "S3 bucket name used for static website"
+  value       = module.s3.name
+}
+output "s3_bucket_region" {
+  description = "S3 bucket region"
+  value       = module.s3.bucket_region
+}
+output "s3_bucket_arn" {
+  description = "S3 bucket ARN"
+  value       = module.s3.bucket_arn
+}
+output "s3_versioning_status" {
+  description = "S3 bucket versioning status"
+  value       = module.s3.versioning_status
+}
+############ IAM Role Outputs ############################
+output "iam_role_arn" {
+  description = "IAM role ARN for Snowflake storage integration"
+  value       = module.iam_role.iam_role_arn
+}
+############ IAM Role Final (Phase 3) Outputs ############################
+output "trust_policy_updated" {
+  description = "Whether the trust policy was updated"
+  value       = module.iam_role_final.trust_policy_updated
+}
+output "trust_policy" {
+  description = "The trust policy that was applied."
+  value       = module.iam_role_final.trust_policy
 }
 
-output "raw_data_bucket_arn" {
-  description = "ARN of the raw data S3 bucket"
-  value       = aws_s3_bucket.raw_data.arn
-}
-
-output "processed_data_bucket_name" {
-  description = "Name of the processed data S3 bucket"
-  value       = aws_s3_bucket.processed_data.id
-}
-
-output "processed_data_bucket_arn" {
-  description = "ARN of the processed data S3 bucket"
-  value       = aws_s3_bucket.processed_data.arn
-}
-
-output "snowflake_role_arn" {
-  description = "ARN of the IAM role for Snowflake"
-  value       = aws_iam_role.snowflake_role.arn
-}
-
-output "snowflake_role_name" {
-  description = "Name of the IAM role for Snowflake"
-  value       = aws_iam_role.snowflake_role.name
-}

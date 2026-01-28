@@ -1,0 +1,78 @@
+name: Terraform CI - Multi-Cloud Snowflake
+run-name: Build run by ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'feature/**'
+      - 'bug/**'
+    paths:
+      - infra/aws/tf/**
+      - infra/snowflake/tf/**
+      - infra/platform/tf/**
+      - infra/input-jsons/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - infra/aws/tf/**
+      - infra/snowflake/tf/**
+      - infra/platform/tf/**
+      - infra/input-jsons/**
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  start-job:
+    name: Start CI Workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set CI Job Status
+        id: set-ci-job-status
+        run: |
+          echo "ci-job-status=started" >> $GITHUB_OUTPUT
+
+  # ============================================================================
+  # Phase 1 & 2: Snowflake Core + Cloud Storage (Parallel)
+  # ============================================================================
+  
+  snowflake-core:
+    name: AWS-Snowflake 
+    needs: start-job
+    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@feature/GHA-0037-add-platform-based-multi
+    with:
+      cloud-provider: platform
+      tflint-ver: ${{ vars.TF_LINT_VER }}
+      backend-type: remote
+      terraform-dir: tf
+      tf-vars-file: terraform.tfvars
+      aws-region: ${{ vars.AWS_REGION }}
+      snowflake-user: ${{ vars.SNOWFLAKE_USER }}
+      snowflake-account: ${{ vars.SNOWFLAKE_ACCOUNT }}
+      snowflake-role: ${{ vars.SNOWFLAKE_ROLE }}
+    secrets:
+      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      aws-role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+      
+
+  # ============================================================================
+  # Release Creation
+  # ============================================================================
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: 
+      - snowflake-core
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Create Release
+        uses: subhamay-bhattacharyya-gha/create-release-action@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
