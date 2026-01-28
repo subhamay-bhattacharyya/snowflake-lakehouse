@@ -6,7 +6,7 @@
 # ============================================================================
 
 provider "aws" {
-  region = "us-east-1"
+  region = local.aws_config.region
 
   default_tags {
     tags = {
