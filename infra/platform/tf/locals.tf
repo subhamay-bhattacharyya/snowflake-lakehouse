@@ -8,7 +8,7 @@ data "aws_caller_identity" "current" {}
 data "aws_kms_key" "kms" { key_id = local.s3_config.kms_key_alias }
 
 locals {
-  current_region = data.aws_region.current.id
+  # current_region = data.aws_region.current.id
 
   # Parse config from JSON files (relative to project root)
   aws_config_file       = jsondecode(file("${path.module}/../../../input-jsons/aws/config.json"))
