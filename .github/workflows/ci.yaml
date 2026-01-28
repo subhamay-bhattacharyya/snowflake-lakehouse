@@ -8,7 +8,9 @@ on:
       - 'feature/**'
       - 'bug/**'
     paths:
+      - infra/aws/tf/**
       - infra/snowflake/tf/**
+      - infra/platform/tf/**
   pull_request:
     branches: [ main ]
     paths:
@@ -35,7 +37,7 @@ jobs:
   snowflake-core:
     name: AWS-Snowflake 
     needs: start-job
-    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
+    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@feature/GHA-0037-add-platform-based-multi
     with:
       cloud-provider: platform
       tflint-ver: ${{ vars.TF_LINT_VER }}
