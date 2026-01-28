@@ -64,47 +64,47 @@ variable "snowflake_private_key_path" {
 # AWS Configuration Object
 # ============================================================================
 
-variable "aws_config" {
-  description = "AWS infrastructure configuration - pass via JSON file"
-  type = object({
-    region = optional(string, "us-east-1")
-    s3 = optional(object({
-      bucket_name   = string
-      versioning    = optional(bool, true)
-      kms_key_alias = optional(string, "alias/aws/s3")
-    }))
-    iam = optional(object({
-      role_name = optional(string, "snowflake-external-stage-role")
-    }))
-    trust = optional(object({
-      snowflake_principal_arn = optional(string, "")
-      snowflake_external_id   = optional(string, "")
-    }))
-  })
-  default = {}
-}
+# variable "s3_config" {
+#   description = "AWS infrastructure configuration - pass via JSON file"
+#   type = object({
+#     region = optional(string, "us-east-1")
+#     s3 = optional(object({
+#       bucket_name   = string
+#       versioning    = optional(bool, true)
+#       kms_key_alias = optional(string, "alias/aws/s3")
+#     }))
+#     iam = optional(object({
+#       role_name = optional(string, "snowflake-external-stage-role")
+#     }))
+#     trust = optional(object({
+#       snowflake_principal_arn = optional(string, "")
+#       snowflake_external_id   = optional(string, "")
+#     }))
+#   })
+#   default = {}
+# }
 
 # ============================================================================
 # Snowflake Configuration Object
 # ============================================================================
 
-variable "snowflake_config" {
-  description = "Snowflake infrastructure configuration - pass via JSON file"
-  type = object({
-    warehouses   = optional(list(any), [])
-    databases    = optional(list(any), [])
-    file_formats = optional(list(any), [])
-    storage_integrations = optional(list(object({
-      name                      = string
-      type                      = optional(string, "EXTERNAL_STAGE")
-      storage_provider          = string
-      storage_aws_role_arn      = optional(string)
-      storage_allowed_locations = list(string)
-      enabled                   = optional(bool, true)
-      comment                   = optional(string, "")
-    })), [])
-    stages    = optional(list(any), [])
-    snowpipes = optional(list(any), [])
-  })
-  default = {}
-}
+# variable "snowflake_config" {
+#   description = "Snowflake infrastructure configuration - pass via JSON file"
+#   type = object({
+#     warehouses   = optional(list(any), [])
+#     databases    = optional(list(any), [])
+#     file_formats = optional(list(any), [])
+#     storage_integrations = optional(list(object({
+#       name                      = string
+#       type                      = optional(string, "EXTERNAL_STAGE")
+#       storage_provider          = string
+#       storage_aws_role_arn      = optional(string)
+#       storage_allowed_locations = list(string)
+#       enabled                   = optional(bool, true)
+#       comment                   = optional(string, "")
+#     })), [])
+#     stages    = optional(list(any), [])
+#     snowpipes = optional(list(any), [])
+#   })
+#   default = {}
+# }
