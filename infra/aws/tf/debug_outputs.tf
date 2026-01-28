@@ -29,7 +29,3 @@
 #   sensitive = true
 # }
 
-# output "debug_private_key_starts_with" {
-#   value     = local.snowflake_private_key != "" ? substr(local.snowflake_private_key, 0, min(30, length(local.snowflake_private_key))) : "empty"
-#   sensitive = true
-# }
