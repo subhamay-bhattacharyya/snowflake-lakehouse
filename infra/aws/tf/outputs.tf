@@ -28,7 +28,7 @@ output "trust_policy_updated" {
   value       = module.iam_role_final.trust_policy_updated
 }
 output "trust_policy" {
-  description = "The trust policy that was applied"
+  description = "The trust policy that was applied."
   value       = module.iam_role_final.trust_policy
 }
 
