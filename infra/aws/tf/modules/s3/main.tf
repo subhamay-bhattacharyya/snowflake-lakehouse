@@ -45,5 +45,5 @@ resource "aws_s3_object" "folders" {
   content_type = "application/x-directory"
 
   server_side_encryption = "aws:kms"
-  kms_key_id             = var.s3_bucket.kms_key_aliasI 
+  kms_key_id             = var.s3_bucket.kms_key_alias
 }
