@@ -46,6 +46,7 @@ module "s3" {
     bucket_name   = var.s3_config.bucket_name
     versioning    = var.s3_config.versioning
     kms_key_alias = var.s3_config.kms_key_alias
+    kms_key_arn   = var.s3_config.kms_key_arn
     bucket_policy = var.s3_config.bucket_policy
     bucket_keys   = var.s3_config.bucket_keys
   }
